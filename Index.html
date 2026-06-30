@@ -1,0 +1,2502 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STHASAMIR TRADING | Deepint Premium Mentorship</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/globe.gl@2.31.1/dist/globe.gl.min.js"></script>
+
+    <script>
+        /* ============================================
+           0. PREMIUM LOADER - 0.5 SECOND AUTO-HIDE
+        ============================================ */
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('premium-loader');
+                if (loader) {
+                    loader.classList.add('hidden');
+                }
+            }, 500);
+        });
+        
+        // Fallback: Hide loader after 0.5s regardless
+        setTimeout(() => {
+            const loader = document.getElementById('premium-loader');
+            if (loader && !loader.classList.contains('hidden')) {
+                loader.classList.add('hidden');
+            }
+        }, 500);
+        
+        /* ============================================
+           1. PREMIUM 3D EARTH VISUALIZATION
+        ============================================ */
+        class PremiumEarthVisualization {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                if (!this.canvas) return;
+                
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 10000);
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: this.canvas, 
+                    antialias: true, 
+                    alpha: true,
+                    precision: 'highp'
+                });
+                
+                this.networkNodes = [];
+                this.connectionLines = [];
+                this.setupScene();
+                this.createEarth();
+                this.createAtmosphere();
+                this.createNetworkNodes();
+                this.createNetworkConnections();
+                this.createAdvancedParticles();
+                this.setupLighting();
+                this.setupInteraction();
+                this.animate();
+            }
+            
+            setupScene() {
+                this.renderer.setSize(360, 360);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.setClearColor(0x000000, 0);
+                this.camera.position.z = 2.8;
+                this.scene.background = null;
+            }
+            
+            createEarth() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 2048;
+                canvas.height = 1024;
+                const ctx = canvas.getContext('2d');
+                
+                // Ocean with gradient
+                const oceanGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                oceanGradient.addColorStop(0, '#0a1f2e');
+                oceanGradient.addColorStop(0.5, '#1a3a52');
+                oceanGradient.addColorStop(1, '#0f2a3d');
+                ctx.fillStyle = oceanGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Continents with vibrant colors
+                const continents = [
+                    { x: 150, y: 200, w: 300, h: 250, color: '#1a5a5a' }, // NA
+                    { x: 750, y: 180, w: 400, h: 200, color: '#5a2a5a' }, // Russia
+                    { x: 950, y: 150, w: 400, h: 300, color: '#1a4a2a' }, // Asia
+                    { x: 1000, y: 280, w: 100, h: 150, color: '#5a4a1a' }, // India
+                    { x: 1100, y: 200, w: 200, h: 180, color: '#5a5a1a' }, // China
+                    { x: 850, y: 400, w: 200, h: 300, color: '#3a3a1a' }, // Africa
+                    { x: 350, y: 400, w: 180, h: 280, color: '#2a4a3a' }, // SA
+                    { x: 1350, y: 500, w: 120, h: 140, color: '#1a3a4a' }  // Australia
+                ];
+                
+                continents.forEach(cont => {
+                    ctx.fillStyle = cont.color;
+                    ctx.fillRect(cont.x, cont.y, cont.w, cont.h);
+                });
+                
+                // Add glow and atmospheric effects
+                ctx.fillStyle = 'rgba(0, 229, 153, 0.08)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Grid for technical look
+                ctx.strokeStyle = 'rgba(0, 210, 255, 0.15)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= 180; i += 30) {
+                    const x = (i / 180) * canvas.width;
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = 0; i <= 90; i += 30) {
+                    const y = (i / 90) * canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const geometry = new THREE.SphereGeometry(1, 128, 64);
+                const material = new THREE.MeshPhongMaterial({
+                    map: texture,
+                    shininess: 8,
+                    emissive: 0x1a5a3d,
+                    emissiveIntensity: 0.4
+                });
+                
+                this.earth = new THREE.Mesh(geometry, material);
+                this.scene.add(this.earth);
+                this.earth.rotation.x = 0.3;
+                this.earth.rotation.y = 0.5;
+            }
+            
+            createAtmosphere() {
+                // Inner atmosphere - Cyan
+                const innerGeo = new THREE.SphereGeometry(1.02, 128, 64);
+                const innerMat = new THREE.MeshBasicMaterial({
+                    color: 0x00d2ff,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                this.scene.add(new THREE.Mesh(innerGeo, innerMat));
+                
+                // Outer atmosphere - Emerald
+                const outerGeo = new THREE.SphereGeometry(1.06, 64, 32);
+                const outerMat = new THREE.MeshBasicMaterial({
+                    color: 0x00E599,
+                    transparent: true,
+                    opacity: 0.1
+                });
+                this.scene.add(new THREE.Mesh(outerGeo, outerMat));
+                
+                // Hover glow
+                const hoverGeo = new THREE.SphereGeometry(1.04, 64, 32);
+                const hoverMat = new THREE.MeshBasicMaterial({
+                    color: 0x00d2ff,
+                    transparent: true,
+                    opacity: 0,
+                    emissive: 0x00d2ff,
+                    emissiveIntensity: 0
+                });
+                this.hoverGlow = new THREE.Mesh(hoverGeo, hoverMat);
+                this.scene.add(this.hoverGlow);
+            }
+            
+            createNetworkNodes() {
+                const nodeGeometry = new THREE.SphereGeometry(0.015, 16, 16);
+                
+                Object.entries(globalCountryNetwork).forEach(([key, data]) => {
+                    const [lat, lng] = data.coords;
+                    const pos = this.latLngToCartesian(lat, lng, 1.15);
+                    
+                    const nodeMaterial = new THREE.MeshBasicMaterial({
+                        color: data.color,
+                        emissive: data.color,
+                        emissiveIntensity: 0.8
+                    });
+                    const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+                    node.position.set(pos.x, pos.y, pos.z);
+                    node.userData = { country: key, data: data };
+                    this.scene.add(node);
+                    this.networkNodes.push(node);
+                });
+            }
+            
+            createNetworkConnections() {
+                const connectionMaterial = new THREE.LineBasicMaterial({
+                    color: 0x00d2ff,
+                    transparent: true,
+                    opacity: 0.4,
+                    linewidth: 2
+                });
+                
+                const countryKeys = Object.keys(globalCountryNetwork);
+                for (let i = 0; i < countryKeys.length; i++) {
+                    for (let j = i + 1; j < Math.min(i + 4, countryKeys.length); j++) {
+                        const country1 = globalCountryNetwork[countryKeys[i]];
+                        const country2 = globalCountryNetwork[countryKeys[j]];
+                        
+                        const pos1 = this.latLngToCartesian(country1.coords[0], country1.coords[1], 1.15);
+                        const pos2 = this.latLngToCartesian(country2.coords[0], country2.coords[1], 1.15);
+                        
+                        const geometry = new THREE.BufferGeometry();
+                        geometry.setAttribute('position', new THREE.BufferAttribute(
+                            new Float32Array([pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z]),
+                            3
+                        ));
+                        
+                        const line = new THREE.Line(geometry, connectionMaterial);
+                        this.scene.add(line);
+                        this.connectionLines.push(line);
+                    }
+                }
+            }
+            
+            latLngToCartesian(lat, lng, radius = 1) {
+                const latRad = lat * Math.PI / 180;
+                const lngRad = lng * Math.PI / 180;
+                
+                return {
+                    x: radius * Math.cos(latRad) * Math.cos(lngRad),
+                    y: radius * Math.sin(latRad),
+                    z: radius * Math.cos(latRad) * Math.sin(lngRad)
+                };
+            }
+            
+            createAdvancedParticles() {
+                const particleCount = 1200;
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(particleCount * 3);
+                const colors = new Float32Array(particleCount * 3);
+                
+                const colorOptions = [
+                    { r: 0, g: 210/255, b: 255/255 },    // Cyan
+                    { r: 0, g: 229/255, b: 153/255 },    // Emerald
+                    { r: 255/255, g: 107/255, b: 53/255 } // Orange
+                ];
+                
+                for (let i = 0; i < particleCount; i++) {
+                    positions[i * 3] = (Math.random() - 0.5) * 8;
+                    positions[i * 3 + 1] = (Math.random() - 0.5) * 8;
+                    positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
+                    
+                    const color = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+                    colors[i * 3] = color.r;
+                    colors[i * 3 + 1] = color.g;
+                    colors[i * 3 + 2] = color.b;
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                
+                const material = new THREE.PointsMaterial({
+                    size: 0.03,
+                    sizeAttenuation: true,
+                    transparent: true,
+                    opacity: 0.7,
+                    vertexColors: true
+                });
+                
+                this.particles = new THREE.Points(geometry, material);
+                this.scene.add(this.particles);
+            }
+            
+            setupLighting() {
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+                this.scene.add(ambientLight);
+                
+                const pointLight1 = new THREE.PointLight(0x00d2ff, 1.5);
+                pointLight1.position.set(5, 3, 5);
+                this.scene.add(pointLight1);
+                
+                const pointLight2 = new THREE.PointLight(0x00E599, 1.0);
+                pointLight2.position.set(-5, -3, -5);
+                this.scene.add(pointLight2);
+                
+                const dirLight = new THREE.DirectionalLight(0xFF6B35, 0.5);
+                dirLight.position.set(3, 2, 3);
+                this.scene.add(dirLight);
+            }
+            
+            setupInteraction() {
+                this.mouse = { x: 0, y: 0 };
+                this.targetRotation = { x: 0, y: 0 };
+                this.raycaster = new THREE.Raycaster();
+                this.mouseVector = new THREE.Vector2();
+                this.isHovering = false;
+                this.hoveredNode = null;
+                
+                document.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    
+                    this.mouseVector.x = this.mouse.x;
+                    this.mouseVector.y = this.mouse.y;
+                    
+                    this.raycaster.setFromCamera(this.mouseVector, this.camera);
+                    const intersects = this.raycaster.intersectObjects(this.networkNodes);
+                    
+                    if (intersects.length > 0) {
+                        const node = intersects[0].object;
+                        if (this.hoveredNode !== node) {
+                            this.hoveredNode = node;
+                            const country = node.userData.country;
+                            if (globalCountryNetwork[country]) {
+                                focusCountry(country);
+                            }
+                        }
+                        this.isHovering = true;
+                    } else {
+                        this.isHovering = false;
+                        this.hoveredNode = null;
+                    }
+                });
+                
+                this.canvas.addEventListener('click', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    this.targetRotation.y += x * 2;
+                    this.targetRotation.x += y * 2;
+                });
+                
+                this.canvas.addEventListener('mouseenter', () => {
+                    this.canvas.style.cursor = 'pointer';
+                });
+                this.canvas.addEventListener('mouseleave', () => {
+                    this.canvas.style.cursor = 'default';
+                    this.isHovering = false;
+                });
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                if (this.earth) {
+                    this.earth.rotation.y += 0.0002;
+                    this.earth.rotation.x += this.targetRotation.x * 0.001;
+                    this.earth.rotation.y += this.targetRotation.y * 0.001;
+                    this.targetRotation.x *= 0.95;
+                    this.targetRotation.y *= 0.95;
+                }
+                
+                // Update network nodes with glow pulse
+                this.networkNodes.forEach((node, i) => {
+                    node.rotation.x += 0.01;
+                    node.rotation.y += 0.01;
+                    node.scale.x = 1 + Math.sin(Date.now() * 0.005 + i) * 0.3;
+                    node.scale.y = node.scale.x;
+                    node.scale.z = node.scale.x;
+                    
+                    if (this.hoveredNode === node) {
+                        node.material.emissiveIntensity = 1.2;
+                        node.scale.multiplyScalar(1.5);
+                    }
+                });
+                
+                // Update connection lines
+                this.connectionLines.forEach((line, i) => {
+                    line.material.opacity = 0.3 + Math.sin(Date.now() * 0.001 + i) * 0.2;
+                });
+                
+                // Hover glow effect
+                if (this.hoverGlow) {
+                    if (this.isHovering) {
+                        this.hoverGlow.material.opacity = Math.min(this.hoverGlow.material.opacity + 0.02, 0.4);
+                        this.hoverGlow.material.emissiveIntensity = Math.min(this.hoverGlow.material.emissiveIntensity + 0.03, 1);
+                    } else {
+                        this.hoverGlow.material.opacity = Math.max(this.hoverGlow.material.opacity - 0.02, 0);
+                        this.hoverGlow.material.emissiveIntensity = Math.max(this.hoverGlow.material.emissiveIntensity - 0.03, 0);
+                    }
+                }
+                
+                // Particle animation
+                if (this.particles) {
+                    this.particles.rotation.x += 0.00003;
+                    this.particles.rotation.y += 0.00008;
+                    this.particles.material.opacity = 0.6 + Math.sin(Date.now() * 0.001) * 0.2;
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+        
+        // Initialize Premium Earth when document is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                new PremiumEarthVisualization('earth-canvas');
+            }, 600);
+        });
+        
+        // Fallback initialization
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    new PremiumEarthVisualization('earth-canvas');
+                }, 600);
+            });
+        } else {
+            setTimeout(() => {
+                new PremiumEarthVisualization('earth-canvas');
+            }, 600);
+        }
+
+        // Global Country Interaction Function
+        function focusCountry(country) {
+            if (!globalCountryNetwork[country]) return;
+            
+            const data = globalCountryNetwork[country];
+            const titleEl = document.getElementById('matrix-region-title');
+            
+            titleEl.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <span>
+                        <span class="text-brand-cyan">${data.flag}</span> 
+                        ${data.name} Hub
+                    </span>
+                    <span class="text-[10px] bg-brand-emerald/30 text-brand-emerald px-3 py-1 rounded font-mono font-bold">
+                        LIVE NODE
+                    </span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-white/10">
+                    <div class="grid grid-cols-2 gap-3 text-[10px]">
+                        <div class="bg-white/5 p-2 rounded">
+                            <span class="text-slate-500 block text-[8px] uppercase">Active Users</span>
+                            <span class="text-white font-bold font-mono">${(data.users / 1000000).toFixed(1)}M</span>
+                        </div>
+                        <div class="bg-white/5 p-2 rounded">
+                            <span class="text-slate-500 block text-[8px] uppercase">Network Status</span>
+                            <span class="text-brand-emerald font-bold">● Connected</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetGlobe() {
+            document.getElementById('matrix-region-title').innerHTML = `
+                <span class="text-slate-300">🌍 Global Network Matrix</span>
+                <span class="text-[10px] text-slate-500 ml-2 block mt-1">20 Premium Trading Nodes Active</span>
+            `;
+            currentRegion = null;
+        }
+
+        // Tailwind Config
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            cyan: '#00d2ff',
+                            emerald: '#00E599',
+                            dark: '#020408',
+                            panel: 'rgba(10, 15, 25, 0.45)'
+                        }
+                    },
+                    animation: {
+                        'ticker': 'ticker 35s linear infinite',
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'loader-spin': 'loaderSpin 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        ticker: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-50%)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        loaderSpin: {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(360deg)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Syncopate:wght@400;700&family=Fira+Code:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #020408;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .brand-font { font-family: 'Syncopate', sans-serif; }
+        .mono-font { font-family: 'Fira Code', monospace; }
+
+        .side-nav-item {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            color: #64748b;
+        }
+        .side-nav-item:hover, .side-nav-item.active {
+            color: #00d2ff;
+            background: rgba(0, 210, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        }
+        .side-nav-item .tooltip {
+            position: absolute;
+            left: 100%;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            background: #0f172a;
+            color: white;
+            font-size: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        .side-nav-item:hover .tooltip {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .glass-panel {
+            background: var(--tw-colors-brand-panel);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-panel:hover {
+            border-color: rgba(0, 229, 153, 0.25);
+        }
+        
+        .premium-border { position: relative; }
+        .premium-border::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #00E599, transparent, #00d2ff);
+            z-index: -1;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+        .premium-border:hover::before { opacity: 1; }
+
+        .social-icon { transition: all 0.3s ease; }
+        .social-icon:hover { transform: translateY(-5px) scale(1.1); color: #fff; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020408; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00d2ff; }
+        
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+
+        /* Premium Ultra-Fast Loader Styles - 0.5 Second Load */
+        .premium-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: linear-gradient(135deg, #020408 0%, #0a0f19 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 500ms cubic-bezier(0.23, 1, 0.32, 1), visibility 500ms;
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .premium-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        /* Multi-Layer Premium Loader */
+        .loader-ring {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 2rem;
+        }
+        
+        .loader-inner-circle {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #00E599, #00d2ff, #ff00ff, #00E599);
+            animation: rotate-360 0.4s linear infinite;
+            filter: blur(1px);
+        }
+        
+        .loader-middle-circle {
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            background: #020408;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0, 229, 153, 0.3);
+        }
+        
+        .loader-core {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle at 30% 30%, #00d2ff, #00E599);
+            border-radius: 50%;
+            box-shadow: 0 0 30px #00E599,
+                        0 0 60px rgba(0, 210, 255, 0.5),
+                        inset 0 0 15px rgba(255,255,255,0.8);
+            animation: pulse-glow 0.5s ease-in-out infinite;
+        }
+        
+        .loader-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #00d2ff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #00d2ff;
+            animation: orbit-dot 0.5s linear infinite;
+        }
+        
+        .loader-dot:nth-child(1) { animation-delay: 0s; }
+        .loader-dot:nth-child(2) { animation-delay: 0.167s; }
+        .loader-dot:nth-child(3) { animation-delay: 0.334s; }
+        
+        .loader-text {
+            margin-top: 1.5rem;
+            font-family: 'Syncopate', sans-serif;
+            letter-spacing: 0.8em;
+            font-size: 0.75rem;
+            color: #00E599;
+            text-transform: uppercase;
+            font-weight: 700;
+            animation: text-flicker 0.5s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(0, 229, 153, 0.6);
+        }
+        
+        .loader-progress {
+            margin-top: 2rem;
+            width: 120px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 229, 153, 0.2);
+        }
+        
+        .loader-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00E599, #00d2ff);
+            border-radius: 1px;
+            animation: progress-fill 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            box-shadow: 0 0 15px #00E599;
+        }
+        
+        @keyframes rotate-360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px #00E599, 0 0 60px rgba(0, 210, 255, 0.5), inset 0 0 15px rgba(255,255,255,0.8); }
+            50% { transform: scale(1.2); box-shadow: 0 0 50px #00d2ff, 0 0 80px rgba(0, 229, 153, 0.6), inset 0 0 20px rgba(255,255,255,1); }
+        }
+        
+        @keyframes orbit-dot {
+            from { transform: rotate(0deg) translateX(45px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(45px) rotate(-360deg); }
+        }
+        
+        @keyframes text-flicker {
+            0%, 100% { opacity: 1; text-shadow: 0 0 20px rgba(0, 229, 153, 0.6); }
+            50% { opacity: 0.7; text-shadow: 0 0 30px rgba(0, 210, 255, 0.8); }
+        }
+        
+        @keyframes progress-fill {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+        
+        /* Premium Icon Enhancement Styles */
+        .side-nav-item i {
+            background: linear-gradient(135deg, #00E599, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 229, 153, 0.3));
+            transition: all 0.3s ease;
+        }
+        
+        .side-nav-item:hover i,
+        .side-nav-item.active i {
+            filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.6));
+            -webkit-text-fill-color: #00d2ff;
+        }
+        
+        /* Premium Header Icons */
+        header i {
+            background: linear-gradient(135deg, #00E599, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 6px rgba(0, 229, 153, 0.25));
+        }
+        
+        /* Premium Button Icons */
+        button i {
+            background: linear-gradient(135deg, #00E599, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 4px rgba(0, 229, 153, 0.2));
+            transition: all 0.3s ease;
+        }
+        
+        button:hover i {
+            filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.5));
+        }
+        
+        /* Enhanced Glass Panel Icons */
+        .glass-panel i {
+            color: #00E599;
+            text-shadow: 0 0 10px rgba(0, 229, 153, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-panel:hover i {
+            color: #00d2ff;
+            text-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+        }
+        
+        /* Premium List Icons with Gradient */
+        li i.fa-check {
+            background: linear-gradient(135deg, #00E599, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 229, 153, 0.4));
+        }
+        
+        /* Premium Section Header Icons */
+        section i {
+            background: linear-gradient(135deg, #00E599, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 5px rgba(0, 229, 153, 0.2));
+        }
+        
+        /* Social Icons Premium Enhancement */
+        .social-icon {
+            color: #00E599;
+            text-shadow: 0 0 10px rgba(0, 229, 153, 0.3);
+            filter: drop-shadow(0 0 5px rgba(0, 229, 153, 0.2));
+        }
+        
+        .social-icon:hover {
+            color: #00d2ff;
+            text-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+            filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.5));
+        }
+        
+        /* Premium Animated Pulse Icons */
+        i.animate-pulse {
+            animation: icon-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes icon-pulse {
+            0%, 100% { 
+                opacity: 1;
+                filter: drop-shadow(0 0 8px rgba(0, 229, 153, 0.3));
+            }
+            50% { 
+                opacity: 0.6;
+                filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.5));
+            }
+        }
+        
+        /* Premium Icon Glow on Hover */
+        a:hover i,
+        button:hover i,
+        div:hover i {
+            animation: icon-glow 0.6s ease-out;
+        }
+        
+        @keyframes icon-glow {
+            0% { 
+                filter: drop-shadow(0 0 0px rgba(0, 210, 255, 0));
+            }
+            100% { 
+                filter: drop-shadow(0 0 12px rgba(0, 210, 255, 0.6));
+            }
+        }
+    </style>
+</head>
+<body class="relative selection:bg-brand-cyan selection:text-black flex">
+    
+    <!-- Premium Ultra-Fast Loader - 0.5 Second Load -->
+    <div id="premium-loader" class="premium-loader">
+        <div class="loader-ring">
+            <div class="loader-inner-circle"></div>
+            <div class="loader-middle-circle">
+                <div class="loader-core"></div>
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+            </div>
+        </div>
+        <div class="loader-progress">
+            <div class="loader-progress-bar"></div>
+        </div>
+        <div class="loader-text">Initializing</div>
+    </div>
+     
+    <div id="canvas-container" class="fixed inset-0 pointer-events-none z-0"></div>
+    <div class="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#020408]/85 to-[#020408] z-0 pointer-events-none"></div>
+
+    <div class="fixed right-0 top-0 h-full w-1.5 bg-white/5 z-[100] pointer-events-none">
+        <div id="pl-beam-fill" class="w-full bg-gradient-to-b from-brand-emerald via-brand-cyan to-blue-500 rounded-b-full shadow-[0_0_20px_#00E599] transition-all duration-75" style="height: 0%"></div>
+        <div id="pl-beam-badge" class="absolute right-4 transform -translate-y-1/2 glass-panel px-4 py-2 rounded-l-xl border-y border-l border-brand-emerald/50 text-right transition-all duration-75 hidden md:block backdrop-blur-3xl shadow-[0_0_25px_rgba(0,229,153,0.15)]" style="top: 0%">
+            <span class="text-[9px] text-slate-300 block tracking-widest uppercase font-bold mb-0.5">Simulated Equity Scaling</span>
+            <span id="pl-counter" class="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-emerald to-brand-cyan mono-font drop-shadow-lg">+$0.00</span>
+        </div>
+    </div>
+
+    <div id="live-purchase-toast" class="fixed top-24 right-8 z-[90] transform translate-x-[200%] transition-transform duration-500 ease-out glass-panel border-l-4 border-l-brand-emerald p-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-sm pointer-events-none backdrop-blur-xl bg-black/60">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-emerald/20 to-brand-cyan/20 text-brand-emerald border border-brand-emerald/30 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,229,153,0.2)]">
+            <i class="fa-solid fa-chart-line text-lg"></i>
+        </div>
+        <div class="text-xs">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="w-2 h-2 rounded-full bg-brand-emerald animate-pulse-fast shadow-[0_0_8px_#00E599]"></span>
+                <span class="text-[10px] text-slate-300 font-black uppercase tracking-widest">Global Terminal Log</span>
+            </div>
+            <p id="toast-text" class="text-slate-200 leading-snug"></p>
+        </div>
+    </div>
+
+    <aside class="fixed left-0 top-0 h-screen w-20 flex flex-col items-center py-8 glass-panel border-r border-white/5 z-50">
+        <a href="#home" class="mb-12 group">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-emerald to-brand-cyan flex items-center justify-center shadow-[0_0_15px_rgba(0,210,255,0.5)] group-hover:scale-110 transition-transform">
+                <span class="text-black font-black brand-font text-lg leading-none mt-1">S</span>
+            </div>
+        </a>
+
+        <nav class="flex flex-col gap-5 flex-1">
+            <a href="#home" class="side-nav-item active"><i class="fa-solid fa-house text-lg"></i><span class="tooltip">Home Base</span></a>
+            <a href="#spotlight" class="side-nav-item"><i class="fa-solid fa-microchip text-lg"></i><span class="tooltip">The Paradigm</span></a>
+            <a href="#methodology" class="side-nav-item"><i class="fa-solid fa-brain text-lg"></i><span class="tooltip">Methodology</span></a>
+            <a href="#trader-essentials" class="side-nav-item"><i class="fa-solid fa-shield-halved text-lg"></i><span class="tooltip">Core Arsenal</span></a>
+            <a href="#comparison" class="side-nav-item"><i class="fa-solid fa-scale-balanced text-lg"></i><span class="tooltip">The Edge</span></a>
+            <a href="#dashboard" class="side-nav-item"><i class="fa-solid fa-trophy text-lg"></i><span class="tooltip">Championship</span></a>
+            <a href="#prop-firm" class="side-nav-item"><i class="fa-solid fa-chart-line text-lg"></i><span class="tooltip">Prop Mastery</span></a>
+            <a href="#pricing" class="side-nav-item"><i class="fa-solid fa-gem text-lg"></i><span class="tooltip">Mentorship</span></a>
+            <a href="#global-customers" class="side-nav-item"><i class="fa-solid fa-earth-americas text-lg"></i><span class="tooltip">Global Network</span></a>
+            <a href="#faq" class="side-nav-item"><i class="fa-solid fa-circle-question text-lg"></i><span class="tooltip">FAQs</span></a>
+        </nav>
+
+        <div class="mt-auto flex flex-col gap-4">
+            <button onclick="openModal('signin')" class="side-nav-item text-slate-400 hover:text-white"><i class="fa-solid fa-lock text-lg"></i><span class="tooltip">Client Login</span></button>
+        </div>
+    </aside>
+
+    <main class="relative z-10 w-full pl-20 overflow-x-hidden">
+
+        <header class="w-full px-8 py-6 flex justify-between items-center relative z-20">
+            <div class="brand-font tracking-tighter text-xl flex items-center gap-2 shrink-0">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-emerald to-brand-cyan">STHASAMIR</span>
+                <span class="text-white">TRADING</span>
+            </div>
+
+            <nav class="hidden lg:flex items-center gap-1 glass-panel p-1.5 rounded-full border border-white/10 shadow-[0_0_30px_rgba(0,210,255,0.05)]">
+                <button onclick="openToolsModal()" class="relative group px-6 py-2.5 rounded-full overflow-hidden flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-white uppercase tracking-widest transition-colors">
+                    <span class="absolute inset-0 bg-gradient-to-r from-brand-emerald/20 to-brand-cyan/20 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out"></span>
+                    <i class="fa-solid fa-screwdriver-wrench text-brand-emerald group-hover:animate-pulse relative z-10"></i>
+                    <span class="relative z-10">Tools</span>
+                    <span class="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-brand-emerald to-brand-cyan scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                </button>
+
+                <div class="w-px h-4 bg-white/10 mx-2"></div> <a href="#dashboard" class="relative group px-6 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest transition-colors">
+                    <i class="fa-solid fa-trophy text-slate-500 group-hover:text-brand-cyan transition-colors"></i>
+                    Arena
+                </a>
+                <a href="#pricing" class="relative group px-6 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white uppercase tracking-widest transition-colors">
+                    <i class="fa-solid fa-gem text-slate-500 group-hover:text-brand-cyan transition-colors"></i>
+                    Mentorship
+                </a>
+            </nav>
+
+            <div class="flex items-center gap-4 shrink-0">
+                <button onclick="openToolsModal()" class="lg:hidden w-10 h-10 rounded-full glass-panel flex items-center justify-center text-brand-cyan border border-white/10 hover:bg-white/10 transition-colors">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                </button>
+                
+                <button onclick="openModal('register')" class="bg-white/10 hover:bg-white text-white hover:text-black font-bold px-6 py-2.5 rounded-full text-xs uppercase tracking-widest transition-all backdrop-blur-md border border-white/20 shadow-lg">
+                    Enroll Now <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </header>
+
+        <section id="home" class="pt-20 pb-16 min-h-[85vh] flex flex-col justify-center items-center text-center px-4 max-w-5xl mx-auto relative">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel border border-brand-cyan/30 text-brand-cyan text-[10px] uppercase tracking-widest mb-8 animate-fade-in">
+                <span class="w-2 h-2 rounded-full bg-brand-cyan animate-pulse"></span> Verified Institutional Training Matrix
+            </div>
+            <h1 class="text-5xl md:text-8xl font-black tracking-tight uppercase leading-[1.05] mb-6 opacity-0 animate-fade-in" style="animation-delay: 0.1s;">
+                Decode The Matrix.<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-emerald via-brand-cyan to-blue-500">Command Liquidity.</span>
+            </h1>
+            <p class="text-slate-300 text-base md:text-xl max-w-3xl font-light mb-10 opacity-0 animate-fade-in" style="animation-delay: 0.2s;">
+                The unified masterclass combining verified global mentorship models into a single quantitative execution standard. Built for NAS100 & XAU/USD operators by <strong>Samir Shrestha</strong>.
+            </p>
+            <div class="flex flex-wrap justify-center gap-5 opacity-0 animate-fade-in" style="animation-delay: 0.3s;">
+                <button onclick="openModal('register')" class="bg-gradient-to-r from-brand-emerald to-brand-cyan text-black font-black px-10 py-4 rounded-xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(0,229,153,0.3)] flex items-center gap-3">
+                    Unlock Strategy Methodology
+                </button>
+                <a href="#spotlight" class="glass-panel text-white font-bold px-8 py-4 rounded-xl hover:bg-white/5 transition-all flex items-center gap-3">
+                    The Time × Price Axis <i class="fa-solid fa-angle-down"></i>
+                </a>
+            </div>
+        </section>
+
+        <div class="w-full bg-black/40 border-y border-white/5 backdrop-blur-md py-4 mb-20 overflow-hidden flex relative z-20">
+            <div class="flex gap-16 px-6 animate-ticker w-max whitespace-nowrap">
+                <script>
+                    const pairs = [
+                        {name: 'NAS100', price: '18,952.75', change: '+0.66%', up: true},
+                        {name: 'XAU/USD', price: '2,345.58', change: '+0.79%', up: true},
+                        {name: 'EUR/USD', price: '1.0884', change: '-0.11%', up: false},
+                        {name: 'GBP/USD', price: '1.2701', change: '-0.09%', up: false},
+                        {name: 'US30', price: '38,722.69', change: '+0.45%', up: true},
+                        {name: 'BTC/USD', price: '67,543.21', change: '+1.12%', up: true},
+                    ];
+                    for(let i=0; i<4; i++) {
+                        pairs.forEach(p => {
+                            const colorClass = p.up ? 'text-brand-emerald' : 'text-red-400';
+                            const icon = p.up ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+                            document.write(`
+                                <div class="inline-flex items-center gap-3">
+                                    <span class="text-sm font-bold text-slate-400 tracking-wider">${p.name}</span>
+                                    <span class="text-lg mono-font font-bold ${colorClass}">${p.price}</span>
+                                    <span class="text-xs ${colorClass}"><i class="fa-solid ${icon}"></i> ${p.change}</span>
+                                </div>
+                            `);
+                        });
+                    }
+                </script>
+            </div>
+        </div>
+
+        <section id="spotlight" class="py-20 px-4 md:px-12 max-w-7xl mx-auto mb-24 relative z-20">
+            <div class="glass-panel premium-border rounded-[3rem] p-8 md:p-16 relative bg-slate-950/90 overflow-hidden shadow-2xl">
+                <div class="absolute -right-20 -top-20 w-96 h-96 bg-brand-cyan/20 rounded-full blur-[100px] pointer-events-none"></div>
+                <div class="absolute -left-20 -bottom-20 w-96 h-96 bg-brand-emerald/10 rounded-full blur-[100px] pointer-events-none"></div>
+                
+                <div class="max-w-4xl relative z-10">
+                    <span class="bg-white/10 text-brand-cyan border border-brand-cyan/30 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase inline-block mb-6 shadow-[0_0_10px_rgba(0,210,255,0.2)]">/ Top-Tier Spotlight Feature</span>
+                    <h2 class="text-4xl md:text-6xl font-black brand-font text-white tracking-tight leading-[1.1] mb-8">
+                        THE QUANTUM AXIS:<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-emerald via-brand-cyan to-blue-500 drop-shadow-md">TIME × PRICE</span>
+                    </h2>
+                    
+                    <div class="space-y-6 text-slate-300 text-sm md:text-lg leading-relaxed font-light mb-12">
+                        <p>
+                            Retail trading is crippled by a fatal presumption: <em class="text-red-400 font-semibold">the belief that human emotions drive market prices.</em> You are taught that charts move because "buyers overpowered sellers." This is an archaic lie designed to provide liquidity to institutional algorithms.
+                        </p>
+                        <p>
+                            Modern markets are governed entirely by the <strong class="text-white">IPDA (Interbank Price Delivery Algorithm)</strong>. The algorithm does not feel fear, greed, or hesitation; it operates strictly on a mathematical execution schedule. In this verified paradigm, <strong class="text-brand-emerald font-bold border-b border-brand-emerald/40 pb-0.5">Time is the catalyst, and Price is merely the advertisement.</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-black/90 border border-white/10 rounded-2xl p-6 md:p-10 mono-font relative shadow-[inset_0_0_30px_rgba(0,0,0,1)] z-10">
+                    <div class="flex flex-wrap items-center justify-between pb-4 mb-8 border-b border-white/10 text-[11px] text-slate-500">
+                        <span class="tracking-widest">DEEPINT_QUANT_CORE // STRATEGY_MATHEMATICS_V2.4</span>
+                        <span class="text-brand-emerald flex items-center gap-2 mt-2 md:mt-0 font-bold tracking-widest"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> ALGOSYSTEM_ONLINE</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/5 hover:border-brand-cyan/40 transition-colors">
+                            <p class="text-[10px] text-brand-cyan uppercase tracking-widest mb-3 font-bold border-b border-white/10 pb-2">Macro Displacement Integral</p>
+                            <div class="text-sm md:text-base text-slate-200 mt-4 overflow-x-auto pb-2 whitespace-nowrap">
+                                <code>
+                                    <span class="text-brand-emerald">ΔP<sub>delivery</sub></span> = ∫<sub>t_0</sub><sup>t_killzone</sup> 
+                                    <span class="text-brand-cyan">[ L<sub>buy_stops</sub> - L<sub>sell_stops</sub> ]</span> 
+                                    · δ<span class="text-yellow-400">(T)</span> dt
+                                </code>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-3 italic">Calculates probability of algorithmic price draw towards resting liquidity pools during macroeconomic window T.</p>
+                        </div>
+                        
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/5 hover:border-brand-emerald/40 transition-colors">
+                            <p class="text-[10px] text-brand-emerald uppercase tracking-widest mb-3 font-bold border-b border-white/10 pb-2">Fair Value Gap (FVG) Imbalance Reversion</p>
+                            <div class="text-sm md:text-base text-slate-200 mt-4 overflow-x-auto pb-2 whitespace-nowrap">
+                                <code>
+                                    <span class="text-blue-400">P(Rebalance)</span> = 1 - e<sup>-(λ · I<sub>vol</sub> / σ<sup>2</sup>)t</sup>
+                                </code>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-3 italic">Poisson probability model dictating the algorithmic necessity to return to an inefficient pricing void (I_vol) over time (t).</p>
+                        </div>
+
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/5 hover:border-pink-400/40 transition-colors">
+                            <p class="text-[10px] text-pink-400 uppercase tracking-widest mb-3 font-bold border-b border-white/10 pb-2">Institutional Volume Delta (IVD)</p>
+                            <div class="text-sm md:text-base text-slate-200 mt-4 overflow-x-auto pb-2 whitespace-nowrap">
+                                <code>
+                                    <span class="text-pink-400">ΔV<sub>inst</sub></span> = Σ (V<sub>bid</sub> - V<sub>ask</sub>) / <span class="text-white">√Time</span>
+                                </code>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-3 italic">Measures the true institutional footprint against retail noise, filtering false volume spikes based on temporal delivery.</p>
+                        </div>
+
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/5 hover:border-yellow-400/40 transition-colors">
+                            <p class="text-[10px] text-yellow-400 uppercase tracking-widest mb-3 font-bold border-b border-white/10 pb-2">Standard Deviation Void Theory</p>
+                            <div class="text-sm md:text-base text-slate-200 mt-4 overflow-x-auto pb-2 whitespace-nowrap">
+                                <code>
+                                    <span class="text-yellow-400">Target<sub>price</sub></span> = μ ± (2.58 × σ<sub>void</sub>)
+                                </code>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-3 italic">Calculates the 99% probability standard deviation expansion blocks for optimal algorithmic take-profit placement.</p>
+                        </div>
+                        
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/5 hover:border-purple-400/40 transition-colors lg:col-span-2">
+                            <p class="text-[10px] text-purple-400 uppercase tracking-widest mb-3 font-bold border-b border-white/10 pb-2">Risk Asymmetry Matrix (1:11+ Optimization)</p>
+                            <div class="text-sm md:text-base text-slate-200 mt-4 overflow-x-auto pb-2 whitespace-nowrap text-center">
+                                <code>
+                                    <span class="text-white">Expected Value (EV)</span> = 
+                                    <span class="text-brand-emerald">[ P<sub>win</sub> × (Risk · 11) ]</span> 
+                                    - <span class="text-red-400">[ (1 - P<sub>win</sub>) × Risk ]</span> 
+                                    > 0, ∀ P<sub>win</sub> ≥ 0.083
+                                </code>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-3 text-center">Mathematical proof that achieving a strict 1:11 Risk-to-Reward ratio requires only an 8.3% win rate to maintain absolute breakeven.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="methodology" class="py-16 px-8 max-w-7xl mx-auto relative z-20">
+            <div class="mb-16">
+                <h2 class="text-brand-cyan text-xs font-bold tracking-widest uppercase mb-2">/ The Architecture</h2>
+                <h3 class="text-4xl md:text-5xl font-bold brand-font text-white">SYSTEMATIC METHODOLOGY</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-panel p-8 rounded-2xl hover:-translate-y-2">
+                    <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-brand-emerald text-xl mb-6"><i class="fa-solid fa-water"></i></div>
+                    <h4 class="text-xl font-bold mb-3 text-white">Liquidity Engineering</h4>
+                    <p class="text-slate-400 text-sm leading-relaxed">Retail is taught to place stops behind support/resistance. We are taught to target those exact stops. Understand how smart money engineers liquidity pools before major market displacements.</p>
+                </div>
+                <div class="glass-panel p-8 rounded-2xl hover:-translate-y-2">
+                    <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-brand-cyan text-xl mb-6"><i class="fa-solid fa-bolt"></i></div>
+                    <h4 class="text-xl font-bold mb-3 text-white">Fair Value Gaps (FVG)</h4>
+                    <p class="text-slate-400 text-sm leading-relaxed">Master the algorithm's need to rebalance inefficient price action. Our entry models heavily rely on high-timeframe structural shifts converging with low-timeframe FVG entries.</p>
+                </div>
+                <div class="glass-panel p-8 rounded-2xl hover:-translate-y-2">
+                    <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-blue-400 text-xl mb-6"><i class="fa-solid fa-brain"></i></div>
+                    <h4 class="text-xl font-bold mb-3 text-white">Asymmetric Alpha</h4>
+                    <p class="text-slate-400 text-sm leading-relaxed">We train your cognitive reflexes to accept extreme risk-to-reward profiles (<strong class="text-white">1:11+ R:R</strong>). Extract massive equity growth while easily absorbing losing streaks without stress.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="trader-essentials" class="py-16 px-8 max-w-7xl mx-auto relative z-20">
+            <div class="mb-16">
+                <h2 class="text-brand-emerald text-xs font-bold tracking-widest uppercase mb-2">/ Required Mechanics</h2>
+                <h3 class="text-4xl md:text-5xl font-bold brand-font text-white">THE PROFESSIONAL OPERATOR'S ARSENAL</h3>
+                <p class="text-slate-400 mt-4 max-w-2xl">Surviving Forex and Futures markets requires a strict mechanical routine. A robust strategy without these three pillars will systematically fail over a large sample size.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-t-brand-emerald hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-brand-emerald"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h4 class="text-lg font-bold text-white uppercase tracking-wider">Flawless Risk Management</h4>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Capital preservation dictates longevity. Learn how to construct mathematical lot-sizing models based on portfolio equity rather than arbitrary dollar amounts. We drill the necessity of 1% maximum exposure into your psychology.</p>
+                    <ul class="text-xs text-slate-300 space-y-2 font-mono">
+                        <li><i class="fa-solid fa-check text-brand-emerald mr-2"></i> Dynamic Lot Sizing per trade setup</li>
+                        <li><i class="fa-solid fa-check text-brand-emerald mr-2"></i> Daily Loss Limits (DLL) Configuration</li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-t-brand-cyan hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-brand-cyan"><i class="fa-solid fa-brain"></i></div>
+                        <h4 class="text-lg font-bold text-white uppercase tracking-wider">Trading Psychology Framework</h4>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Remove emotion from the execution matrix. Fear of Missing Out (FOMO) and revenge trading are symptoms of a lack of statistical confidence. Our backtesting routines generate absolute trust in the Deepint model.</p>
+                    <ul class="text-xs text-slate-300 space-y-2 font-mono">
+                        <li><i class="fa-solid fa-check text-brand-cyan mr-2"></i> Neutral response to drawdown cycles</li>
+                        <li><i class="fa-solid fa-check text-brand-cyan mr-2"></i> Eliminating hesitation at Killzones</li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-t-purple-500 hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-purple-400"><i class="fa-solid fa-book-journal-whills"></i></div>
+                        <h4 class="text-lg font-bold text-white uppercase tracking-wider">Quantitative Journaling</h4>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-4">You cannot improve what you do not measure. Discover how to properly record trade setups via Notion & Excel templates. Track session tags, Time of Day, MFE (Maximum Favorable Excursion), and MAE.</p>
+                    <ul class="text-xs text-slate-300 space-y-2 font-mono">
+                        <li><i class="fa-solid fa-check text-purple-400 mr-2"></i> Screenshot database building</li>
+                        <li><i class="fa-solid fa-check text-purple-400 mr-2"></i> Weekly performance debriefs</li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-t-blue-500 hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-blue-400"><i class="fa-solid fa-chart-candlestick"></i></div>
+                        <h4 class="text-lg font-bold text-white uppercase tracking-wider">Futures & Forex Depth</h4>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-4">Understand the underlying mechanics of the instruments you trade. Differentiate between Forex CFDs and Centralized Futures data. Grasp how margin, leverage, spreads, and overnight swaps affect large scaling.</p>
+                    <ul class="text-xs text-slate-300 space-y-2 font-mono">
+                        <li><i class="fa-solid fa-check text-blue-400 mr-2"></i> Tick Value vs Pip Value calculations</li>
+                        <li><i class="fa-solid fa-check text-blue-400 mr-2"></i> DOM (Depth of Market) awareness</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison" class="py-24 px-4 md:px-8 max-w-6xl mx-auto relative z-20">
+            <div class="text-center mb-16">
+                <h2 class="text-brand-emerald text-xs font-bold tracking-widest uppercase mb-2">/ Separation</h2>
+                <h3 class="text-4xl md:text-5xl font-bold brand-font text-white">THE DEEPINT EDGE</h3>
+            </div>
+
+            <div class="glass-panel rounded-3xl overflow-hidden border border-white/10">
+                <div class="grid grid-cols-3 bg-white/5 border-b border-white/10 p-6 items-center">
+                    <div class="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-widest">Feature Comparison</div>
+                    <div class="text-center text-xs md:text-lg font-black text-slate-500 uppercase">Retail Mentorship</div>
+                    <div class="text-center text-sm md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-emerald to-brand-cyan brand-font">STHASAMIR DEEPINT</div>
+                </div>
+                
+                <div class="grid grid-cols-3 p-6 border-b border-white/5 items-center hover:bg-white/5">
+                    <div class="text-xs md:text-sm font-semibold text-white">Core Driver Concept</div>
+                    <div class="text-center text-xs md:text-sm text-slate-400">Subjective Sentiment & Patterns</div>
+                    <div class="text-center text-xs md:text-sm font-bold text-brand-emerald">Time-based Algorithmic Delivery</div>
+                </div>
+                <div class="grid grid-cols-3 p-6 border-b border-white/5 items-center hover:bg-white/5">
+                    <div class="text-xs md:text-sm font-semibold text-white">Minimum R:R Target</div>
+                    <div class="text-center text-xs md:text-sm text-slate-400">1:1 or Negative R:R</div>
+                    <div class="text-center text-xs md:text-sm font-black text-brand-cyan">Strict 1:11+ Asymmetric Models</div>
+                </div>
+                <div class="grid grid-cols-3 p-6 border-b border-white/5 items-center hover:bg-white/5">
+                    <div class="text-xs md:text-sm font-semibold text-white">Risk Protocol</div>
+                    <div class="text-center text-xs md:text-sm text-slate-400">Static / Arbitrary Lot Sizes</div>
+                    <div class="text-center text-xs md:text-sm font-bold text-brand-cyan">Dynamic Portfolio Equity Scaling</div>
+                </div>
+                <div class="grid grid-cols-3 p-6 border-b border-white/5 items-center hover:bg-white/5">
+                    <div class="text-xs md:text-sm font-semibold text-white">Market Focus</div>
+                    <div class="text-center text-xs md:text-sm text-slate-400">Distracted (Crypto, Stocks, Any FX)</div>
+                    <div class="text-center text-xs md:text-sm font-bold text-brand-emerald">Laser Focused (NAS100, XAU, Majors)</div>
+                </div>
+                <div class="grid grid-cols-3 p-6 border-b border-white/5 items-center hover:bg-white/5">
+                    <div class="text-xs md:text-sm font-semibold text-white">Psychological Framework</div>
+                    <div class="text-center text-xs md:text-sm text-slate-400">Emotional & Reactive</div>
+                    <div class="text-center text-xs md:text-sm font-bold text-brand-emerald">Systematic & Neutral</div>
+                </div>
+                <div class="grid grid-cols-3 p-6 border-b border-white/5 items-center hover:bg-white/5">
+                    <div class="text-xs md:text-sm font-semibold text-white">Prop Firm Engineering</div>
+                    <div class="text-center text-xs md:text-sm text-slate-400">None (Retail account focus)</div>
+                    <div class="text-center text-xs md:text-sm font-bold text-brand-cyan">Optimized for $100k+ Evaluations</div>
+                </div>
+                <div class="grid grid-cols-3 p-6 items-center hover:bg-white/5">
+                    <div class="text-xs md:text-sm font-semibold text-white">Required Win-Rate</div>
+                    <div class="text-center text-xs md:text-sm text-slate-400">High stress (70%+ required)</div>
+                    <div class="text-center text-xs md:text-sm font-bold text-brand-emerald">Massively Profitable at 22% Win-Rate</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard" class="py-24 px-4 md:px-8 max-w-7xl mx-auto relative z-20">
+            <div class="glass-panel premium-border rounded-[2.5rem] bg-slate-950/80 p-8 md:p-12 shadow-2xl">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pb-8 border-b border-white/10">
+                    <div>
+                        <span class="bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase inline-block mb-3">Live Global Arena</span>
+                        <h2 class="text-3xl md:text-5xl font-black text-white brand-font uppercase">DEEPINT ALGO-CHAMPIONSHIP</h2>
+                        <p class="text-slate-400 text-sm mt-1">Monthly simulated evaluations testing performance consistency, risk protocols, and asymmetric precision parameters.</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-slate-900 to-black border border-brand-emerald/40 px-6 py-4 rounded-xl text-center shadow-[0_0_20px_rgba(0,229,153,0.15)] shrink-0 w-full lg:w-auto">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-0.5">Total Live Prize Matrix</span>
+                        <span class="text-3xl font-black mono-font text-brand-emerald animate-pulse">$600,000 USD</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-10">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div>
+                            <h3 class="text-white text-xs font-black tracking-wider uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-sitemap text-brand-cyan"></i> Allocated Pool Breakdown</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                        <tr class="border-b border-white/10 text-slate-400 font-bold bg-white/5">
+                                            <th class="p-3 uppercase tracking-wider">Placement Range</th>
+                                            <th class="p-3 uppercase tracking-wider">Cash Payout Split</th>
+                                            <th class="p-3 uppercase tracking-wider">System Incentives</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-white/5 text-slate-200">
+                                        <tr class="bg-brand-emerald/5 border-l-4 border-l-brand-emerald font-bold">
+                                            <td class="p-3 text-white flex items-center gap-2"><i class="fa-solid fa-trophy text-yellow-400"></i> Rank 01</td>
+                                            <td class="p-3 text-brand-emerald font-bold font-mono text-sm">$150,000.00</td>
+                                            <td class="p-3 text-white text-[10px] uppercase tracking-wide">Free 1-Year Elite Subscription</td>
+                                        </tr>
+                                        <tr class="bg-brand-cyan/5 border-l-4 border-l-brand-cyan font-bold">
+                                            <td class="p-3 text-white flex items-center gap-2"><i class="fa-solid fa-trophy text-slate-400"></i> Rank 02</td>
+                                            <td class="p-3 text-brand-cyan font-bold font-mono text-sm">$80,000.00</td>
+                                            <td class="p-3 text-white text-[10px] uppercase tracking-wide">Free 1-Year Elite Subscription</td>
+                                        </tr>
+                                        <tr class="bg-blue-500/5 border-l-4 border-l-blue-500 font-bold">
+                                            <td class="p-3 text-white flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-700"></i> Rank 03</td>
+                                            <td class="p-3 text-blue-400 font-bold font-mono text-sm">$50,000.00</td>
+                                            <td class="p-3 text-white text-[10px] uppercase tracking-wide">Free 1-Year Elite Subscription</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 text-slate-300 font-semibold">Rank 04 - 05</td>
+                                            <td class="p-3 font-mono text-slate-100">$20,000.00 <span class="text-slate-500 text-[10px]">each</span></td>
+                                            <td class="p-3 text-slate-400">Priority Verification Nodes</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 text-slate-300">Rank 06 - 10</td>
+                                            <td class="p-3 font-mono text-slate-100">$10,000.00 <span class="text-slate-500 text-[10px]">each</span></td>
+                                            <td class="p-3 text-slate-400">Risk Desk Review Allocation</td>
+                                        </tr>
+                                        <tr class="bg-pink-500/10 border-l-4 border-l-pink-500">
+                                            <td class="p-3 text-pink-400 font-bold flex items-center gap-2"><i class="fa-solid fa-dice"></i> Random Draw (50 Users)</td>
+                                            <td class="p-3 font-mono text-white font-bold">$100,000.00 <span class="text-pink-300 text-[10px]">($2k each)</span></td>
+                                            <td class="p-3 text-slate-400 text-[10px] uppercase">Selected globally from all active operators</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                            <div class="bg-white/5 border border-white/5 p-5 rounded-2xl">
+                                <h4 class="text-brand-cyan text-xs font-black tracking-wider uppercase mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-gavel"></i> Competition Trading Rules
+                                </h4>
+                                <ul class="space-y-2 text-[11px] text-slate-300 list-disc list-inside">
+                                    <li>Maximum daily simulated drawdown limit strictly capped at <span class="text-white font-bold">5.0%</span>.</li>
+                                    <li>Maximum total cumulative account drawdown capped at <span class="text-white font-bold">10.0%</span>.</li>
+                                    <li>All active trades must be completely liquidated prior to weekend market closure.</li>
+                                    <li>Minimum of <span class="text-brand-emerald font-bold">5 active trading days</span> required during cycle.</li>
+                                    <li>Forbidden execution inside high-impact macroeconomic news windows (±5 mins).</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-white/5 border border-white/5 p-5 rounded-2xl">
+                                <h4 class="text-purple-400 text-xs font-black tracking-wider uppercase mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-clock-rotate-left"></i> Historical Matrix Analytics
+                                </h4>
+                                <div class="space-y-3">
+                                    <div class="bg-black/40 p-2.5 rounded-xl border border-white/5 flex justify-between items-center text-[11px]">
+                                        <div>
+                                            <p class="text-white font-bold">June 2026 Championship</p>
+                                            <p class="text-slate-500 text-[10px]">386,410 Active Operators</p>
+                                        </div>
+                                        <span class="text-brand-emerald font-mono font-bold">+4,210.50%</span>
+                                    </div>
+                                    <div class="bg-black/40 p-2.5 rounded-xl border border-white/5 flex justify-between items-center text-[11px]">
+                                        <div>
+                                            <p class="text-white font-bold">May 2026 Championship</p>
+                                            <p class="text-slate-500 text-[10px]">325,399 Active Operators</p>
+                                        </div>
+                                        <span class="text-brand-emerald font-mono font-bold">+3,988.12%</span>
+                                    </div>
+                                    <div class="pt-1.5 flex justify-between items-center text-[11px] border-t border-white/5">
+                                        <span class="text-slate-400">Total Past History Participants:</span>
+                                        <span class="text-purple-400 font-black font-mono">1,271,809 Users</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-white text-xs font-black tracking-wider uppercase flex items-center gap-2"><i class="fa-solid fa-bolt text-brand-emerald"></i> Current Leaderboard</h4>
+                                <span class="text-[9px] bg-white/10 px-2 py-0.5 rounded font-mono text-slate-400">Cycle: Active</span>
+                            </div>
+                            
+                            <div class="space-y-2.5">
+                                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-brand-emerald font-bold text-xs">#01</span>
+                                        <div>
+                                            <span class="text-xs text-white font-bold block flex items-center gap-1.5">Samir S. <span class="text-sm leading-none">🇳🇵</span></span>
+                                            <span class="text-[9px] text-slate-400 uppercase">Kathmandu, NP</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-brand-emerald font-mono font-bold text-xs">+4958.39 %</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-brand-cyan font-bold text-xs">#02</span>
+                                        <div>
+                                            <span class="text-xs text-white font-bold block flex items-center gap-1.5">Amit V. <span class="text-sm leading-none">🇮🇳</span></span>
+                                            <span class="text-[9px] text-slate-400 uppercase">Mumbai, IN</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-brand-cyan font-mono font-bold text-xs">+3812.45 %</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-blue-400 font-bold text-xs">#03</span>
+                                        <div>
+                                            <span class="text-xs text-white font-bold block flex items-center gap-1.5">Elena B. <span class="text-sm leading-none">🇷🇺</span></span>
+                                            <span class="text-[9px] text-slate-400 uppercase">Moscow, RU</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-blue-400 font-mono font-bold text-xs">+2945.18 %</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-transparent">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-slate-400 font-bold text-xs">#04</span>
+                                        <div>
+                                            <span class="text-xs text-slate-300 font-semibold block flex items-center gap-1.5">Kenji R. <span class="text-sm leading-none">🇯🇵</span></span>
+                                            <span class="text-[9px] text-slate-500 uppercase">Tokyo, JP</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-slate-300 font-mono text-xs">+1865.10 %</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-white/10 text-xs space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Competition Month:</span>
+                                <span class="text-white font-bold font-mono">July 2026</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Remaining Time:</span>
+                                <span id="comp-countdown" class="text-brand-cyan font-bold font-mono animate-pulse">14d 08h 42m 15s</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Current Participants:</span>
+                                <span id="live-participants" class="text-brand-emerald font-bold font-mono">124,837 Operators</span>
+                            </div>
+                        </div>
+
+                        <button onclick="openModal('register', 'Algo-Championship Entry')" class="w-full mt-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-bold py-3 rounded-xl transition-all uppercase tracking-wider">
+                            Register For Current Championship Cycle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="expert" class="py-16 px-8 max-w-6xl mx-auto relative z-20">
+            <div class="glass-panel premium-border rounded-[2rem] p-8 md:p-14 relative overflow-hidden bg-black/50">
+                <div class="absolute top-0 right-0 bg-gradient-to-r from-brand-emerald to-brand-cyan text-black font-black text-xs px-8 py-3 rounded-bl-3xl tracking-widest uppercase shadow-[0_0_20px_rgba(0,229,153,0.3)]">
+                    Operator Detail
+                </div>
+                
+                <h2 class="text-brand-cyan text-xs font-bold tracking-widest uppercase mb-2 mt-4 md:mt-0">/ The Architect</h2>
+                <h3 class="text-4xl md:text-6xl font-black text-white mb-6 brand-font">SAMIR SHRESTHA</h3>
+
+                <p class="text-slate-300 text-base md:text-lg leading-relaxed max-w-3xl mb-10">
+                    Professional Level Expert Daytrader specializing in advanced algorithmic trading concepts, mathematical ICT methodologies, and precision NAS100 analysis. Samir bridges the massive knowledge gap between retail liquidity providers and institutional algorithmic execution.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-slate-800/80">
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                        <i class="fa-solid fa-crosshairs text-2xl text-brand-cyan mb-3"></i>
+                        <span class="text-slate-500 text-[10px] block uppercase tracking-wider mb-1">Asset Focus</span>
+                        <p class="text-base font-bold text-white">Forex & Indices Market</p>
+                        <span class="text-xs text-brand-emerald mt-1 block">NAS100, US30, XAU/USD</span>
+                    </div>
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                        <i class="fa-solid fa-envelope-open-text text-2xl text-brand-cyan mb-3"></i>
+                        <span class="text-slate-500 text-[10px] block uppercase tracking-wider mb-1">Secure Email</span>
+                        <a href="mailto:369sthasamir@gmail.com" class="text-base font-bold text-white hover:text-brand-cyan transition-colors break-all">369sthasamir@gmail.com</a>
+                    </div>
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+                        <i class="fa-solid fa-phone-volume text-2xl text-brand-cyan mb-3"></i>
+                        <span class="text-slate-500 text-[10px] block uppercase tracking-wider mb-1">Direct Line</span>
+                        <p class="text-base font-bold text-white">+977 9746349140</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="prop-firm" class="py-20 px-8 max-w-7xl mx-auto relative z-20">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-brand-emerald text-xs font-bold tracking-widest uppercase mb-2">/ Capital Scaling</h2>
+                <h3 class="text-4xl font-bold brand-font text-white">EVALUATION MASTERY</h3>
+                <p class="text-slate-400 mt-4">We teach you the strict quantitative rules-based frameworks required to consistently extract performance fees from top-tier proprietary trading firms.</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-panel p-6 rounded-2xl text-center border-t-4 border-t-brand-cyan hover:scale-105 transition-transform">
+                    <h4 class="text-3xl font-black text-white mb-1">8-10%</h4>
+                    <p class="text-brand-cyan text-[10px] font-bold uppercase tracking-wider">Phase 1 Target</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl text-center border-t-4 border-t-brand-emerald hover:scale-105 transition-transform">
+                    <h4 class="text-3xl font-black text-white mb-1">5%</h4>
+                    <p class="text-brand-emerald text-[10px] font-bold uppercase tracking-wider">Daily Drawdown Cap</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl text-center border-t-4 border-t-blue-500 hover:scale-105 transition-transform">
+                    <h4 class="text-3xl font-black text-white mb-1">90%</h4>
+                    <p class="text-blue-500 text-[10px] font-bold uppercase tracking-wider">Profit Splits</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl text-center border-t-4 border-t-purple-500 hover:scale-105 transition-transform">
+                    <h4 class="text-3xl font-black text-white mb-1">$2M</h4>
+                    <p class="text-purple-500 text-[10px] font-bold uppercase tracking-wider">Allocation Scaling</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-16 px-4 md:px-8 max-w-6xl mx-auto relative z-20">
+            <div class="glass-panel premium-border rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-10 bg-gradient-to-br from-black to-slate-900 border-brand-emerald/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <div class="w-32 h-32 shrink-0 rounded-full bg-gradient-to-tr from-brand-emerald via-brand-cyan to-blue-400 flex items-center justify-center shadow-[0_0_60px_rgba(0,229,153,0.6),0_0_40px_rgba(0,210,255,0.4)] relative overflow-hidden border border-brand-emerald/40 animate-pulse-glow">
+                    <svg class="w-20 h-20 text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Premium Certification Badge -->
+                        <defs>
+                            <linearGradient id="certGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00E599;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#00d2ff;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="50" cy="50" r="48" fill="url(#certGrad)" stroke="rgba(255,255,255,0.5)" stroke-width="2" opacity="0.9"/>
+                        <!-- Star burst pattern - Enhanced -->
+                        <circle cx="50" cy="25" r="5" fill="#FFD700" opacity="0.95"/>
+                        <circle cx="70" cy="35" r="5" fill="#FF6B35" opacity="0.95"/>
+                        <circle cx="75" cy="50" r="5" fill="#FFD700" opacity="0.95"/>
+                        <circle cx="70" cy="65" r="5" fill="#FF6B35" opacity="0.95"/>
+                        <circle cx="50" cy="75" r="5" fill="#FFD700" opacity="0.95"/>
+                        <circle cx="30" cy="65" r="5" fill="#FF6B35" opacity="0.95"/>
+                        <circle cx="25" cy="50" r="5" fill="#FFD700" opacity="0.95"/>
+                        <circle cx="30" cy="35" r="5" fill="#FF6B35" opacity="0.95"/>
+                        <!-- Central circle -->
+                        <circle cx="50" cy="50" r="22" fill="rgba(0,229,153,0.2)" stroke="rgba(0,210,255,0.6)" stroke-width="2"/>
+                        <!-- Premium checkmark -->
+                        <path d="M 40 50 L 45 58 L 62 40" stroke="#FFFFFF" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-2xl md:text-4xl font-black text-white brand-font mb-3">CERTIFICATION OF EXCELLENCE</h3>
+                    <p class="text-slate-400 text-sm md:text-base leading-relaxed mb-4">
+                        Upon mastering the Quantum Axis and Deepint Models, elite operators receive the <strong class="text-white">SthaSamir Accredited Quantitative Operator Certification</strong>. We are inherently confident in our mathematical framework. Strict adherence to our 1:11 asymmetric risk parameters and time methodology yields a <span class="text-brand-emerald font-bold border-b border-brand-emerald/50 pb-0.5">mathematically guaranteed edge</span> over algorithmic market cycles.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-16 px-4 md:px-8 max-w-6xl mx-auto relative z-20">
+            <div class="glass-panel rounded-3xl p-6 md:p-10 border border-purple-500/20 bg-gradient-to-r from-purple-950/20 via-black to-slate-950/40 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
+                    <div>
+                        <span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase inline-block mb-2">Social Responsibility Mandate</span>
+                        <h3 class="text-xl md:text-3xl font-black text-white brand-font uppercase">DEEPINT INSTITUTIONAL SCHOLARSHIP</h3>
+                    </div>
+                    <button onclick="openModal('register', 'Scholarship Matrix Application')" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-6 py-3 rounded-xl uppercase tracking-wider transition-colors shrink-0 shadow-[0_0_15px_rgba(147,51,234,0.3)]">
+                        Apply For Assistance Matrix
+                    </button>
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                    We recognize that exceptional technical cognitive capacity exists independently of capital access. SthaSamir Trading offers fully funded entry options to regional and global applicants matching specific economic criteria under a tight execution framework.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                        <span class="text-purple-400 font-bold block mb-1 uppercase tracking-wider"><i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> 1. Hardship Validation</span>
+                        <span class="text-slate-400 leading-relaxed">Applicants must provide verified low-income certification or verifiable proof of regional economic structural limitations.</span>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                        <span class="text-purple-400 font-bold block mb-1 uppercase tracking-wider"><i class="fa-solid fa-gauge-high mr-1.5"></i> 2. Consistency Benchmarking</span>
+                        <span class="text-slate-400 leading-relaxed">Must complete a 30-day simulated sandbox tracking trial keeping maximum daily drawdowns strictly below 3.0%.</span>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                        <span class="text-purple-400 font-bold block mb-1 uppercase tracking-wider"><i class="fa-solid fa-user-shield mr-1.5"></i> 3. Allocation Audits</span>
+                        <span class="text-slate-400 leading-relaxed">Recipients undergo bi-weekly account parameters and metric analysis directly under Samir Shrestha's desk controls.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="py-24 px-4 md:px-8 border-t border-white/5 relative bg-black/40 z-20">
+            <div class="max-w-7xl mx-auto mt-8">
+                <div class="text-center max-w-3xl mx-auto mb-20">
+                    <h2 class="text-brand-cyan text-xs font-bold tracking-widest uppercase mb-2">/ Elite Access</h2>
+                    <h3 class="text-4xl md:text-5xl font-bold mb-4 brand-font text-white">PREMIUM MENTORSHIP</h3>
+                    <p class="text-slate-400">Intensive institutional quantitative training for serious operators only.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+                    
+                    <div class="glass-panel rounded-3xl p-8 relative">
+                        <h3 class="text-xl font-bold text-white mb-1">Deepint Foundation</h3>
+                        <p class="text-slate-500 text-xs mb-6">Transition from retail to institutional logic.</p>
+                        <div class="mb-8"><span class="text-4xl font-black text-white">$999</span><span class="text-slate-500 text-sm"> / mo</span></div>
+                        <ul class="space-y-4 mb-8 text-sm text-slate-300">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-emerald"></i> Algorithmic Structure Basics</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-emerald"></i> Time vs Price Fundamentals</li>
+                            <li class="flex items-center gap-3">
+                                <i class="fa-solid fa-check text-brand-emerald"></i> 
+                                <span class="bg-brand-emerald/10 text-brand-emerald font-bold px-2 py-1 rounded text-[11px] uppercase tracking-wider border border-brand-emerald/30 shadow-[0_0_10px_rgba(0,229,153,0.15)]">Deepint Core Concept</span>
+                            </li>
+                        </ul>
+                        <button onclick="openModal('register', 'Foundation Plan - $999/mo')" class="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3.5 rounded-xl transition-all border border-white/10">Select Tier</button>
+                    </div>
+
+                    <div class="glass-panel premium-border rounded-3xl p-10 relative transform lg:-translate-y-4 z-10 bg-slate-900/90 shadow-[0_30px_60px_rgba(0,0,0,0.8)]">
+                        <div class="absolute -top-4 inset-x-0 flex justify-center z-20">
+                            <span class="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] md:text-[11px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-fast border border-white/20 whitespace-nowrap">
+                                LAUNCH PROMO: 20% OFF (Q1 ONLY - 3 WEEKS LEFT)
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-emerald to-brand-cyan mb-1 mt-4">SthaSamir Deepint Elite</h3>
+                        <p class="text-slate-400 text-xs mb-6">The complete blueprint to prop firm scaling.</p>
+                        <div class="mb-8">
+                            <span class="text-2xl font-bold line-through text-slate-500 mr-2">$2,999</span>
+                            <span class="text-5xl font-black text-white">$2,399</span><span class="text-slate-500 text-sm"> / mo</span>
+                        </div>
+                        <ul class="space-y-4 mb-8 text-sm text-slate-200">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-cyan"></i> <strong>All Foundation Features Included</strong></li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-cyan"></i> Complete ICT / FVG Models</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-cyan"></i> 1:11+ Asymmetric Trade Plans</li>
+                            <li class="flex items-center gap-3 mt-4 pt-2 border-t border-white/10">
+                                <i class="fa-solid fa-unlock-keyhole text-brand-cyan"></i> 
+                                <span class="bg-brand-cyan/20 text-brand-cyan font-bold px-2 py-1 rounded text-[11px] uppercase tracking-wider border border-brand-cyan/30 shadow-[0_0_10px_rgba(0,210,255,0.2)]">Unlock Deepint Trading Strategy</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <i class="fa-solid fa-stopwatch text-brand-cyan"></i> 
+                                <span class="bg-brand-cyan/20 text-brand-cyan font-bold px-2 py-1 rounded text-[11px] uppercase tracking-wider border border-brand-cyan/30 shadow-[0_0_10px_rgba(0,210,255,0.2)]">Quantum Time Methodology</span>
+                            </li>
+                        </ul>
+                        <button onclick="openModal('register', 'Deepint Elite - $2,399/mo')" class="w-full bg-gradient-to-r from-brand-emerald to-brand-cyan text-black font-black py-4 rounded-xl uppercase tracking-wider shadow-[0_0_20px_rgba(0,210,255,0.25)] hover:scale-105 transition-all">Enroll Now</button>
+                    </div>
+
+                    <div class="glass-panel rounded-3xl p-8 relative">
+                        <h3 class="text-xl font-bold text-white mb-1">1 in 1 Deepint Quantum Circle</h3>
+                        <p class="text-slate-500 text-xs mb-6">Private algorithmic mentorship with Samir.</p>
+                        <div class="mb-8"><span class="text-4xl font-black text-white">$9,999</span><span class="text-slate-500 text-sm"> / lifetime</span></div>
+                        <ul class="space-y-4 mb-8 text-sm text-slate-300">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-emerald"></i> <strong>Everything in Deepint Elite Tier</strong></li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-emerald"></i> Direct 24/7 Private Line</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-emerald"></i> Weekly 1-on-1 Desk Reviews</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brand-emerald"></i> Guaranteed Certification</li>
+                        </ul>
+                        <button onclick="openModal('register', '1 in 1 Deepint Quantum Circle - $9,999')" class="w-full bg-gradient-to-r from-brand-emerald/30 to-brand-cyan/30 hover:from-brand-emerald/50 hover:to-brand-cyan/50 text-white font-bold py-3.5 rounded-xl transition-all border border-brand-emerald/40 shadow-[0_0_20px_rgba(0,229,153,0.15)]">Apply For Access</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="global-customers" class="py-24 px-4 md:px-8 max-w-7xl mx-auto relative z-20">
+            <div class="glass-panel premium-border rounded-[2.5rem] bg-slate-950/80 p-8 md:p-12 shadow-2xl">
+                <div class="mb-12">
+                    <span class="bg-brand-emerald/10 text-brand-emerald border border-brand-emerald/20 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase inline-block mb-3">Institutional Footprint</span>
+                    <h2 class="text-3xl md:text-5xl font-black text-white brand-font uppercase">GLOBAL CUSTOMER INTELLIGENCE MATRIX</h2>
+                    <p class="text-slate-400 text-sm mt-1">Real-time demographic tracking of active proprietary and institutional operators worldwide. Interactive network visualization.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div class="relative flex flex-col items-center justify-center bg-black/50 border border-white/5 rounded-3xl p-6 overflow-hidden min-h-[460px]">
+                        <div class="absolute top-4 left-4 z-30 flex flex-col gap-2">
+                            <button onclick="focusRegion(37, -95, 'North American Node')" class="bg-white/5 hover:bg-brand-cyan/20 text-white text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded border border-white/10 transition-all text-left flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-brand-cyan rounded-full animate-pulse"></span> North America Node
+                            </button>
+                            <button onclick="focusRegion(60, 100, 'Eurasian Federation Node')" class="bg-white/5 hover:bg-brand-cyan/20 text-white text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded border border-white/10 transition-all text-left flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse"></span> Eurasian Node
+                            </button>
+                            <button onclick="resetGlobe()" class="bg-white/5 hover:bg-brand-cyan/20 text-white text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded border border-white/10 transition-all text-left flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-brand-emerald rounded-full animate-pulse"></span> Reset System Alignment
+                            </button>
+                        </div>
+                        
+                        <!-- Premium 3D Earth Visualization -->
+                        <div id="earth-wrapper" class="relative w-full max-w-[360px] aspect-square rounded-full shadow-[0_0_80px_rgba(0,210,255,0.35)] mx-auto cursor-move border border-white/10 z-[50] flex items-center justify-center bg-gradient-to-br from-slate-900 to-black overflow-hidden">
+                            <canvas id="earth-canvas" style="width: 100%; height: 100%;"></canvas>
+                        </div>
+                        
+                        <p class="text-[10px] text-slate-500 mt-6 uppercase tracking-widest flex items-center gap-2 z-30">
+                            <i class="fa-solid fa-circle-info text-brand-cyan animate-pulse"></i> Network Heatmap Active • 180+ Countries
+                        </p>
+                        
+                        <!-- Interactive Hover Info Panel -->
+                        <div id="earth-hover-info" class="mt-4 p-3 rounded-lg border border-brand-emerald/40 bg-brand-emerald/5 text-xs text-slate-300 text-center">
+                            <span class="text-brand-emerald font-bold">💫 Hover over Earth to explore regions</span>
+                            <span class="text-[9px] text-slate-500 block mt-1">View customers, excellence rankings & top students</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-white/5 border border-white/5 p-6 rounded-2xl">
+                            <h3 id="matrix-region-title" class="text-lg font-bold text-white brand-font uppercase border-b border-white/10 pb-2 mb-4 text-brand-cyan">Active Standard Aggregate Matrix</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-brand-cyan/40 transition-colors">
+                                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider mb-1">🇺🇸 USA Base Status</span>
+                                    <span class="text-xl font-black text-white font-mono">7,190,673 Users</span>
+                                </div>
+                                <div class="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-purple-400/40 transition-colors">
+                                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider mb-1">🇷🇺 Russia Base Status</span>
+                                    <span class="text-xl font-black text-white font-mono">5,472,300 Users</span>
+                                </div>
+                                <div class="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-brand-emerald/40 transition-colors">
+                                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider mb-1">🇮🇳 India Base Status</span>
+                                    <span class="text-xl font-black text-white font-mono">5,070,120 Users</span>
+                                </div>
+                                <div class="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-yellow-400/40 transition-colors">
+                                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider mb-1">🇨🇳 China Base Status</span>
+                                    <span class="text-xl font-black text-white font-mono">4,275,000 Users</span>
+                                </div>
+                                <div class="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-red-400/40 transition-colors">
+                                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider mb-1">🇳🇵 Nepal Base Status</span>
+                                    <span class="text-xl font-black text-white font-mono">39,056 Users</span>
+                                </div>
+                                <div class="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-blue-400/40 transition-colors">
+                                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider mb-1">Global Active Aggregate</span>
+                                    <span class="text-xl font-black text-brand-emerald font-mono">27,090,252 Users</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 text-xs text-slate-300 leading-relaxed">
+                            <strong class="text-white uppercase block mb-1 tracking-wider"><i class="fa-solid fa-satellite mr-1"></i> Multi-Axis Coordinate Synchronization</strong>
+                            Every parameter updates live across targeted continent segments, displaying unique mathematical alpha consistency trends matching our terminal network structure.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-16 px-4 md:px-8 border-t border-white/5 bg-black/60 relative z-20">
+            <div class="max-w-5xl mx-auto text-center">
+                <p class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-2">Supported Institutional & Regional Gateways</p>
+                <span class="text-[9px] bg-brand-cyan/10 border border-brand-cyan/20 px-3 py-1 rounded-full text-brand-cyan uppercase font-mono tracking-wider inline-block mb-8">
+                    Global Clearance Status: Active Settlement Network across 180+ countries
+                </span>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 opacity-90 text-xs">
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-bold text-slate-100 hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-brands fa-cc-mastercard text-lg text-[#EB001B]"></i> MasterCard</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-bold text-slate-100 hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-brands fa-cc-visa text-lg text-[#0A2540]"></i> Visa Credit</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-bold text-slate-100 hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-brands fa-cc-amex text-lg text-[#016FD0]"></i> Amex Global</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-bold text-slate-100 hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-brands fa-apple-pay text-2xl"></i> Apple Pay</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-bold text-slate-100 hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-brands fa-google-pay text-2xl"></i> Google Pay</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-black text-[#60bb46] hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-solid fa-wallet"></i> eSewa Mobile</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-black text-[#a53b91] hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-solid fa-shield-halved"></i> Khalti Wallet</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-bold text-slate-200 hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-solid fa-building-columns text-brand-cyan"></i> Bank Swift</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-bold text-[#00457C] hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-brands fa-paypal text-base"></i> PayPal Node</div>
+                    <div class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass-panel font-bold text-[#F7931A] hover:-translate-y-1 transition-transform border border-white/10"><i class="fa-brands fa-bitcoin text-base"></i> USDT / Crypto</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="faq" class="py-24 px-8 max-w-4xl mx-auto relative z-20 border-t border-white/5 bg-black/30">
+            <div class="text-center mb-16">
+                <h2 class="text-brand-cyan text-xs font-bold tracking-widest uppercase mb-2">/ Inquiries</h2>
+                <h3 class="text-4xl md:text-5xl font-bold brand-font text-white">FREQUENTLY ASKED QUESTIONS</h3>
+            </div>
+            
+            <div class="space-y-4">
+                <details class="glass-panel rounded-xl group border border-white/5 cursor-pointer hover:border-brand-cyan/30 transition-colors">
+                    <summary class="p-6 font-bold text-white flex justify-between items-center outline-none select-none">
+                        Is this mentorship suitable for beginners?
+                        <i class="fa-solid fa-chevron-down text-brand-cyan transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-6 text-slate-400 text-sm leading-relaxed border-t border-white/5 pt-4 mt-2">
+                        While absolute beginners can join the Foundation tier to learn the Deepint Core Concept, the Elite and Inner Circle tiers are intense quantitative programs designed for operators ready to unlearn retail trading and apply strict institutional algorithms. Basic knowledge of MT4/MT5 and TradingView is recommended.
+                    </div>
+                </details>
+                
+                <details class="glass-panel rounded-xl group border border-white/5 cursor-pointer hover:border-brand-cyan/30 transition-colors">
+                    <summary class="p-6 font-bold text-white flex justify-between items-center outline-none select-none">
+                        How does the Algo-Championship distribution function?
+                        <i class="fa-solid fa-chevron-down text-brand-cyan transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-6 text-slate-400 text-sm leading-relaxed border-t border-white/5 pt-4 mt-2">
+                        The monthly championship tracks student metrics on specific mock accounts. The global pool is distributed strictly by ranking positions across the Top 50 operators at the close of each billing matrix sequence. Additionally, $100,000 is distributed entirely at random (50 users winning $2k each) to ensure engagement incentives across all skill brackets.
+                    </div>
+                </details>
+
+                <details class="glass-panel rounded-xl group border border-white/5 cursor-pointer hover:border-brand-cyan/30 transition-colors">
+                    <summary class="p-6 font-bold text-white flex justify-between items-center outline-none select-none">
+                        What are the exact condition parameters for the Scholarship?
+                        <i class="fa-solid fa-chevron-down text-brand-cyan transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-6 text-slate-400 text-sm leading-relaxed border-t border-white/5 pt-4 mt-2">
+                        Scholarships are under tight data governance controls. Applicants must upload regional asset/income documentation verifying genuine capital limits. If cleared, the user must run a strict 30-day performance benchmark tracking routine showing systematic execution accuracy and keeping daily sandbox trailing values under a fixed 3% ceiling.
+                    </div>
+                </details>
+                
+                <details id="faq-refund" class="glass-panel rounded-xl group border border-white/5 cursor-pointer hover:border-brand-emerald/50 transition-colors">
+                    <summary class="p-6 font-bold text-brand-emerald flex justify-between items-center outline-none select-none">
+                        Refund and Cancellation Policy
+                        <i class="fa-solid fa-chevron-down transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-6 text-slate-400 text-sm leading-relaxed border-t border-white/5 pt-4 mt-2">
+                        <strong class="text-white">Cancellation:</strong> You may cancel your monthly subscription at any time through the terminal portal. Your access will remain active until the end of the current billing cycle. No further charges will be applied post-cancellation.<br><br>
+                        <strong class="text-white">Refunds:</strong> Due to the highly proprietary nature of the Deepint Trading Strategy, Quantum Time Methodology, and the immediate access to digital intellectual property, <span class="text-red-400 font-bold">all sales are strictly final</span>. We do not offer refunds on accessed digital intel, formulas, or completed 1-on-1 sessions. Exceptions are only made if accidental double-charges occur through our payment gateways.
+                    </div>
+                </details>
+                
+                <details class="glass-panel rounded-xl group border border-white/5 cursor-pointer hover:border-brand-cyan/30 transition-colors">
+                    <summary class="p-6 font-bold text-white flex justify-between items-center outline-none select-none">
+                        How does the Guaranteed Success Certification work?
+                        <i class="fa-solid fa-chevron-down text-brand-cyan transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-6 text-slate-400 text-sm leading-relaxed border-t border-white/5 pt-4 mt-2">
+                        The certification guarantees that if you strictly follow our algorithmic parameters, execute trades solely within the defined Macro Displacement windows, and adhere flawlessly to the 1:11 Risk Matrix, the mathematical probability of long-term failure is near zero. The "guarantee" is rooted in verified quantitative mathematics, not subjective market conditions.
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <section id="upcoming-mentorship" class="py-24 px-4 md:px-8 border-t border-white/5 bg-slate-950/40 relative z-20">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <span class="bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20 px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase inline-block mb-3">
+                        SAMPLE OF UPCOMING MENTORSHIP PROGRAM
+                    </span>
+                    <h2 class="text-3xl md:text-5xl font-black text-white brand-font uppercase">FUTURE COMPETITION MATRIX</h2>
+                    <p class="text-slate-400 text-sm mt-2">Preview timeline schedule for subsequent evaluation championships and synchronized private desk strategies.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-brand-cyan bg-black/40 hover:-translate-y-1 transition-transform">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-[10px] font-mono text-brand-cyan font-bold uppercase tracking-wider">August 2026 Cycle</span>
+                            <span class="text-[9px] bg-white/10 text-slate-400 px-2 py-0.5 rounded font-mono">Pending</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-white mb-2">Advanced Liquidity Matrix Tournament</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed mb-4">Focusing strictly on institutional liquidity pools, engineering intentional retail stop-runs, and mitigating multi-hour mitigation blocks.</p>
+                        <div class="text-[11px] font-mono text-slate-500">Allocation Standard: $250,000 Payout Max Limit</div>
+                    </div>
+                    
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-brand-emerald bg-black/40 hover:-translate-y-1 transition-transform">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-[10px] font-mono text-brand-emerald font-bold uppercase tracking-wider">September 2026 Cycle</span>
+                            <span class="text-[9px] bg-white/10 text-slate-400 px-2 py-0.5 rounded font-mono">Pending</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-white mb-2">Institutional FVG Rebalance Championship</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed mb-4">Advanced diagnostic testing of Fair Value Gap entries, automated order block footprint detection, and volume delivery tracking rules.</p>
+                        <div class="text-[11px] font-mono text-slate-500">Allocation Standard: $500,000 Payout Max Limit</div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-purple-500 bg-black/40 hover:-translate-y-1 transition-transform">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-wider">October 2026 Cycle</span>
+                            <span class="text-[9px] bg-white/10 text-slate-400 px-2 py-0.5 rounded font-mono">Pending</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-white mb-2">Macro Time-Block Execution Masterclass</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed mb-4">The absolute temporal execution standard assessing strict quantitative precision metrics specifically during active London and NY Open windows.</p>
+                        <div class="text-[11px] font-mono text-slate-500">Allocation Standard: $1,000,000 Payout Max Limit</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-t border-white/10 bg-[#020408]/90 backdrop-blur-xl pt-16 pb-12 px-8 relative z-20 text-xs text-slate-500">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-8 items-start md:items-center">
+                <div class="text-center md:text-left">
+                    <span class="brand-font text-white text-lg block mb-2">STHASAMIR <span class="text-brand-cyan">TRADING</span></span>
+                    <p class="max-w-md mx-auto md:mx-0 mb-4">Educational quant-trading services. High risk disclosure: CFDs and leveraged futures carry substantial risk of loss. Always manage risk using mathematical principles.</p>
+                    
+                    <div class="flex items-center justify-center md:justify-start gap-2 text-brand-emerald font-bold mb-4">
+                        <i class="fa-solid fa-location-dot"></i> Kapan, Kathmandu, Bagmati Province, Nepal
+                    </div>
+                    
+                    <div class="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] uppercase tracking-wider">
+                        <a href="#faq-refund" class="hover:text-brand-cyan transition-colors" id="footer-refund-link">Refund & Cancellation Policy</a>
+                        <span class="text-white/20">|</span>
+                        <a href="#" class="hover:text-brand-cyan transition-colors">Terms of Service</a>
+                        <span class="text-white/20">|</span>
+                        <a href="#" class="hover:text-brand-cyan transition-colors">Privacy Policy</a>
+                    </div>
+                </div>
+                
+                <div class="text-center md:text-right w-full md:w-auto mt-6 md:mt-0">
+                    <div class="flex justify-center md:justify-end gap-4 mb-6">
+                        <a href="#" class="social-icon text-slate-400 text-lg hover:text-white"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon text-slate-400 text-lg hover:text-white"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="https://discord.gg/EVeEQSweb" target="_blank" class="social-icon text-[#5865F2] text-2xl hover:text-white"><i class="fa-brands fa-discord"></i></a>
+                        <a href="#" class="social-icon text-slate-400 text-lg hover:text-white"><i class="fa-brands fa-telegram"></i></a>
+                        <a href="#" class="social-icon text-slate-400 text-lg hover:text-white"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                    <p class="text-white font-bold uppercase tracking-wider mb-1">© 2026 Samir Shrestha.</p>
+                    <p>All Rights Reserved. Unauthorized duplication, scanning, or digital scraping of quantitative strategies is strictly prohibited by law.</p>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <div id="ai-chat-widget" class="fixed bottom-6 right-6 md:right-10 z-[110] flex flex-col items-end pointer-events-auto">
+        <div id="chat-window" class="hidden mb-4 w-[320px] md:w-[380px] glass-panel rounded-2xl border border-brand-cyan/40 shadow-[0_20px_60px_rgba(0,210,255,0.2)] overflow-hidden flex flex-col h-[420px] origin-bottom-right transition-all">
+            <div class="bg-gradient-to-r from-brand-emerald/20 to-brand-cyan/20 p-4 border-b border-white/10 flex justify-between items-center backdrop-blur-md">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-brand-emerald animate-pulse shadow-[0_0_8px_#00E599]"></div>
+                    <span class="font-bold text-xs uppercase text-white brand-font tracking-wider">Deepint AI Core</span>
+                </div>
+                <button onclick="toggleChat()" class="text-slate-400 hover:text-white transition-colors p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 text-xs font-light scroll-smooth bg-black/40">
+                <div class="bg-white/5 border border-white/5 p-3 rounded-xl text-slate-300 max-w-[85%] leading-relaxed shadow-sm">
+                    <strong class="block text-[9px] text-brand-cyan mb-1 tracking-widest uppercase">System Terminal</strong>
+                    Online. Ask me about the Elite tier 20% discount, Championship Prize Pool allocations, or regional payment gateways like eSewa/Khalti.
+                </div>
+            </div>
+            <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-white/10 bg-[#060913] flex gap-2">
+                <input type="text" id="chat-input" placeholder="Query quantitative terminal..." class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-cyan transition-colors" autocomplete="off">
+                <button type="submit" class="bg-brand-cyan text-black px-4 py-2.5 rounded-lg font-bold hover:bg-brand-emerald transition-colors"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+        </div>
+        <button onclick="toggleChat()" class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-emerald to-brand-cyan text-black flex items-center justify-center shadow-[0_0_30px_rgba(0,229,153,0.5)] hover:scale-110 active:scale-95 transition-all group border border-white/20 relative overflow-hidden">
+            <svg class="w-7 h-7 text-black" viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <!-- Premium AI Chatbot Icon -->
+                <!-- Head circle -->
+                <circle cx="50" cy="35" r="20" fill="currentColor"/>
+                <!-- Eyes -->
+                <circle cx="43" cy="32" r="2.5" fill="white"/>
+                <circle cx="57" cy="32" r="2.5" fill="white"/>
+                <!-- Mouth smile -->
+                <path d="M 43 38 Q 50 41 57 38" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <!-- Body rectangle -->
+                <rect x="38" y="55" width="24" height="28" rx="3" fill="currentColor"/>
+                <!-- Chat bubble window -->
+                <rect x="42" y="60" width="16" height="12" rx="2" fill="rgba(255,255,255,0.3)" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
+                <!-- Dots indicator -->
+                <circle cx="46" cy="67" r="1" fill="rgba(255,255,255,0.8)"/>
+                <circle cx="50" cy="67" r="1" fill="rgba(255,255,255,0.8)"/>
+                <circle cx="54" cy="67" r="1" fill="rgba(255,255,255,0.8)"/>
+                <!-- Buttons on body -->
+                <rect x="42" y="74" width="4" height="4" rx="1" fill="rgba(255,255,255,0.4)"/>
+                <rect x="48" y="74" width="4" height="4" rx="1" fill="rgba(255,255,255,0.4)"/>
+                <rect x="54" y="74" width="4" height="4" rx="1" fill="rgba(255,255,255,0.4)"/>
+                <!-- Antenna -->
+                <line x1="50" y1="15" x2="50" y2="8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="50" cy="6" r="1.5" fill="white"/>
+            </svg>
+        </button>
+    </div>
+
+    <div id="authModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center px-4 bg-black/80 backdrop-blur-xl transition-opacity duration-300 opacity-0 md:pl-20">
+        <div class="glass-panel w-full max-w-lg p-8 md:p-10 rounded-[2rem] relative premium-border shadow-[0_20px_70px_rgba(0,210,255,0.15)] transform scale-95 transition-transform duration-300" id="authModalContent">
+            <button onclick="closeModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all z-10">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div id="signin-view" class="hidden animate-fade-in">
+                <div class="mb-8 text-center">
+                    <div class="w-16 h-16 bg-gradient-to-tr from-brand-emerald/20 to-brand-cyan/20 rounded-2xl mx-auto flex items-center justify-center text-brand-cyan mb-4 border border-brand-cyan/30">
+                        <i class="fa-solid fa-fingerprint text-3xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-black text-white brand-font tracking-tight mb-1">TERMINAL</h3>
+                    <p class="text-xs text-slate-400 uppercase tracking-widest">Active Operator Access</p>
+                </div>
+                <form onsubmit="event.preventDefault()" class="space-y-4">
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="email" placeholder="Email Address" class="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-cyan transition-colors" required>
+                    </div>
+                    <div>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="password" placeholder="Password" class="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-cyan transition-colors" required>
+                        </div>
+                        <div class="text-right mt-2"><a href="#" class="text-[10px] uppercase font-bold tracking-wider text-slate-400 hover:text-brand-cyan transition-colors">Forgot Password?</a></div>
+                    </div>
+                    <button class="w-full bg-brand-cyan hover:bg-[#00bfff] text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm shadow-[0_0_20px_rgba(0,210,255,0.3)] transition-all mt-2">Secure Login</button>
+                </form>
+                <p class="text-center text-xs uppercase tracking-wider text-slate-500 mt-8">
+                    Not enrolled? <button onclick="switchAuthView('register')" class="text-white font-bold hover:text-brand-cyan ml-2 border-b border-white hover:border-brand-cyan transition-colors pb-0.5">Apply Here</button>
+                </p>
+            </div>
+
+            <div id="register-view" class="hidden animate-fade-in">
+                <div class="mb-6 text-center">
+                    <h3 class="text-2xl font-black text-white brand-font tracking-tight mb-1">DEEPINT ENROLLMENT</h3>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest">Secure Your Institutional Edge</p>
+                </div>
+                <form onsubmit="event.preventDefault()" class="space-y-4">
+                    <div id="selected-plan-box" class="hidden bg-brand-emerald/10 border border-brand-emerald/30 rounded-lg p-3 mb-4 text-center">
+                        <span class="text-[9px] text-slate-300 uppercase font-bold tracking-wider block mb-1">Selected Quantitative Tier:</span>
+                        <span id="selected-plan-name" class="text-sm font-black text-brand-emerald mono-font"></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="text" placeholder="First Name" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-emerald transition-colors" required>
+                        <input type="text" placeholder="Last Name" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-emerald transition-colors" required>
+                    </div>
+                    <input type="email" placeholder="Email Address" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-emerald transition-colors" required>
+                    <input type="tel" placeholder="Phone / WhatsApp" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-emerald transition-colors" required>
+                    
+                    <div class="pt-1">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" class="mt-0.5 accent-brand-emerald w-4 h-4 bg-black border-white/10 rounded" required>
+                            <span class="text-[10px] text-slate-400 leading-relaxed uppercase">I accept the <a href="#" class="text-white hover:text-brand-emerald underline">Terms of Service</a> & <a href="#faq-refund" class="text-white hover:text-brand-emerald underline">Refund Policy</a>.</span>
+                        </label>
+                    </div>
+                    <button class="w-full bg-gradient-to-r from-brand-emerald to-brand-cyan hover:opacity-90 text-black font-black py-4 rounded-xl uppercase tracking-widest text-sm shadow-[0_0_25px_rgba(0,229,153,0.3)] transition-all mt-2 group">
+                        Route to Gateway <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </form>
+                <p class="text-center text-xs uppercase tracking-wider text-slate-500 mt-6">
+                    Already enrolled? <button onclick="switchAuthView('signin')" class="text-white font-bold hover:text-brand-emerald ml-2 border-b border-white hover:border-brand-emerald transition-colors pb-0.5">Terminal Login</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toolsModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4 md:p-10 bg-black/80 backdrop-blur-xl transition-opacity duration-300 opacity-0 md:pl-24">
+        <div class="glass-panel w-full h-full max-w-[1400px] rounded-[2rem] relative premium-border shadow-[0_20px_70px_rgba(0,229,153,0.15)] flex flex-col overflow-hidden transition-transform duration-300 scale-95" id="toolsModalContent">
+            
+            <div class="bg-black/60 border-b border-white/10 px-6 py-4 flex justify-between items-center backdrop-blur-xl z-20 shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-emerald/20 to-brand-cyan/20 flex items-center justify-center border border-brand-emerald/30 text-brand-emerald shadow-[0_0_15px_rgba(0,229,153,0.2)]">
+                        <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-white brand-font tracking-widest text-sm md:text-lg uppercase leading-none">Deepint Analytical Tools</h3>
+                        <span class="text-[10px] font-mono text-brand-cyan uppercase tracking-widest">Active Remote Connection</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="https://samir-1shrestha.github.io/STHASAMIR-Deepint/" target="_blank" class="hidden md:flex items-center gap-2 text-[10px] font-bold text-slate-400 hover:text-white uppercase tracking-wider transition-colors group">
+                        Open in New Tab <i class="fa-solid fa-arrow-up-right-from-square group-hover:text-brand-cyan transition-colors"></i>
+                    </a>
+                    <div class="w-px h-6 bg-white/10 hidden md:block"></div>
+                    <button onclick="closeToolsModal()" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 transition-all group">
+                        <i class="fa-solid fa-xmark text-lg group-hover:rotate-90 transition-transform"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="relative flex-1 w-full bg-[#020408]">
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <div class="w-12 h-12 rounded-full border-2 border-white/10 border-t-brand-cyan animate-spin mb-4"></div>
+                    <span class="text-brand-cyan font-mono text-xs tracking-widest uppercase animate-pulse">Establishing Link...</span>
+                </div>
+                <iframe src="https://samir-1shrestha.github.io/STHASAMIR-Deepint/" class="absolute inset-0 w-full h-full border-0 z-10 bg-transparent rounded-b-[2rem]"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ----------------------------------------------------
+           0. PREMIUM FULLSCREEN LOADER
+        ---------------------------------------------------- */
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('premium-loader');
+            if (loader) {
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    loader.style.pointerEvents = 'none';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 800);
+                }, 650); // Faster load
+            }
+            
+            setTimeout(() => {
+                initGlobeMatrix();
+            }, 100);
+        });
+
+        /* ----------------------------------------------------
+           1. RIGHT-SIDE EQUITY P/L BEAM
+        ---------------------------------------------------- */
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const docHeight = Math.max(
+                document.body.scrollHeight, document.documentElement.scrollHeight,
+                document.body.offsetHeight, document.documentElement.offsetHeight,
+                document.body.clientHeight, document.documentElement.clientHeight
+            ) - window.innerHeight;
+            
+            let scrollPercent = docHeight > 0 ? (scrollTop / docHeight) : 0;
+            if (scrollPercent > 1) scrollPercent = 1;
+            if (scrollPercent < 0) scrollPercent = 0;
+            
+            const maxProfit = 142850.00;
+            const currentSimulatedPL = (scrollPercent * maxProfit).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            document.getElementById('pl-beam-fill').style.height = `${scrollPercent * 100}%`;
+            document.getElementById('pl-beam-badge').style.top = `${scrollPercent * 100}%`;
+            document.getElementById('pl-counter').innerText = `+$${currentSimulatedPL}`;
+        });
+
+        /* ----------------------------------------------------
+           2. PROCEDURAL GLOBAL LIVE DATA LOGS
+        ---------------------------------------------------- */
+        const dynamicBuyersPool = [];
+        const poolFirstGlobal = ["Marcus", "Liam", "Sophia", "David", "Kenji", "Carlos", "Chloe", "Alexander", "Fatima", "Elena"];
+        const poolLastGlobal = ["V.", "W.", "L.", "M.", "R.", "S.", "B.", "A.", "K.", "N."];
+        const poolCitiesGlobal = ["London, UK", "New York, US", "Tokyo, JP", "Dubai, UAE", "Sydney, AU", "Singapore, SG", "Moscow, RU", "Mumbai, IN"];
+        const poolFirstNep = ["Aryan", "Nitesh", "Bibek", "Sandeep", "Aayush", "Rohan"];
+        const poolCitiesNep = ["Kathmandu, NP", "Pokhara, NP", "Lalitpur, NP", "Chitwan, NP"];
+        const poolTiers = ["Deepint Elite Tier", "1 in 1 Deepint Quantum Circle", "Foundation Matrix"];
+
+        for (let i = 1; i <= 1000; i++) {
+            let item = {};
+            if (i % 25 === 0) {
+                item.n = poolFirstNep[Math.floor(Math.random() * poolFirstNep.length)] + " S.";
+                item.c = poolCitiesNep[Math.floor(Math.random() * poolCitiesNep.length)];
+            } else {
+                item.n = poolFirstGlobal[Math.floor(Math.random() * poolFirstGlobal.length)] + " " + poolLastGlobal[Math.floor(Math.random() * poolLastGlobal.length)];
+                item.c = poolCitiesGlobal[Math.floor(Math.random() * poolCitiesGlobal.length)];
+            }
+            item.p = poolTiers[Math.floor(Math.random() * poolTiers.length)];
+            dynamicBuyersPool.push(item);
+        }
+
+        let buyerIdx = 0;
+        setTimeout(() => {
+            setInterval(() => {
+                const toast = document.getElementById('live-purchase-toast');
+                const b = dynamicBuyersPool[buyerIdx];
+                document.getElementById('toast-text').innerHTML = `<strong class="text-white font-bold">${b.n}</strong> (${b.c}) unlocked <span class="text-brand-cyan font-bold block mt-0.5">${b.p}</span>`;
+                
+                toast.classList.remove('translate-x-[200%]');
+                setTimeout(() => { toast.classList.add('translate-x-[200%]'); }, 4500);
+                buyerIdx = (buyerIdx + 1) % dynamicBuyersPool.length;
+            }, 8500);
+        }, 3000);
+
+        /* ----------------------------------------------------
+           3. THREE.JS STARFIELD & SPIRAL GALAXY BACKGROUND 
+        ---------------------------------------------------- */
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+        const pointLight = new THREE.PointLight(0x00d2ff, 2.5, 100);
+        pointLight.position.set(0, 0, 0); 
+        scene.add(pointLight);
+
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 2000;
+        const starArray = new Float32Array(starCount * 3);
+        const starColArray = new Float32Array(starCount * 3);
+        for(let i=0; i < starCount * 3; i+=3) {
+            starArray[i] = (Math.random() - 0.5) * 400;
+            starArray[i+1] = (Math.random() - 0.5) * 400;
+            starArray[i+2] = (Math.random() - 0.5) * 400;
+            const isBlue = Math.random() > 0.8;
+            starColArray[i] = isBlue ? 0.5 : 1.0;
+            starColArray[i+1] = isBlue ? 0.8 : 1.0;
+            starColArray[i+2] = 1.0;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starArray, 3));
+        starGeo.setAttribute('color', new THREE.BufferAttribute(starColArray, 3));
+        const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 0.15, vertexColors: true, transparent: true, opacity: 0.5 }));
+        scene.add(stars);
+
+        const galParams = { count: 12000, size: 0.08, radius: 35, branches: 4, spin: 1.2, randomness: 0.6, power: 3 };
+        const galGeo = new THREE.BufferGeometry();
+        const galPos = new Float32Array(galParams.count * 3);
+        const galCol = new Float32Array(galParams.count * 3);
+        const colInside = new THREE.Color('#00E599');
+        const colOutside = new THREE.Color('#00458e');
+
+        for(let i = 0; i < galParams.count; i++) {
+            const i3 = i * 3;
+            const radius = Math.random() * galParams.radius;
+            const spinAngle = radius * galParams.spin;
+            const branchAngle = ((i % galParams.branches) / galParams.branches) * Math.PI * 2;
+            const rX = Math.pow(Math.random(), galParams.power) * (Math.random() < 0.5 ? 1 : -1) * galParams.randomness * radius;
+            const rY = Math.pow(Math.random(), galParams.power) * (Math.random() < 0.5 ? 1 : -1) * galParams.randomness * radius;
+            const rZ = Math.pow(Math.random(), galParams.power) * (Math.random() < 0.5 ? 1 : -1) * galParams.randomness * radius;
+
+            galPos[i3] = Math.cos(branchAngle + spinAngle) * radius + rX;
+            galPos[i3 + 1] = rY - 2; 
+            galPos[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + rZ;
+
+            const mixedColor = colInside.clone().lerp(colOutside, radius / galParams.radius);
+            galCol[i3] = mixedColor.r; galCol[i3+1] = mixedColor.g; galCol[i3+2] = mixedColor.b;
+        }
+        galGeo.setAttribute('position', new THREE.BufferAttribute(galPos, 3));
+        galGeo.setAttribute('color', new THREE.BufferAttribute(galCol, 3));
+        const galaxy = new THREE.Points(galGeo, new THREE.PointsMaterial({ size: galParams.size, blending: THREE.AdditiveBlending, depthWrite: false, vertexColors: true, transparent: true, opacity: 0.7 }));
+        galaxy.rotation.x = 0.35;
+        scene.add(galaxy);
+
+        const solarSystem = new THREE.Group();
+        scene.add(solarSystem);
+        const centerMat = new THREE.MeshBasicMaterial({ color: 0x00d2ff, wireframe: true, transparent: true, opacity: 0.3 });
+        solarSystem.add(new THREE.Mesh(new THREE.SphereGeometry(6, 32, 32), centerMat));
+        solarSystem.add(new THREE.Mesh(new THREE.SphereGeometry(5.5, 32, 32), new THREE.MeshBasicMaterial({ color: 0x001122 })));
+
+        function createOrbit(r) {
+            const orb = new THREE.Mesh(new THREE.TorusGeometry(r, 0.02, 16, 100), new THREE.MeshBasicMaterial({ color: 0x00E599, transparent: true, opacity: 0.1 }));
+            orb.rotation.x = Math.PI / 2; return orb;
+        }
+        const distances = [12, 18, 26, 35];
+        distances.forEach(d => solarSystem.add(createOrbit(d)));
+
+        const planets = [];
+        function createPlanet(r, col, dist, spd, yOff) {
+            const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 32), new THREE.MeshStandardMaterial({ color: col, roughness: 0.4 }));
+            const w = new THREE.Object3D(); w.add(m); m.position.set(dist, yOff, 0); solarSystem.add(w);
+            planets.push({ mesh: m, wrapper: w, speed: spd });
+        }
+        createPlanet(0.8, 0x00E599, distances[0], 0.008, 0);   
+        createPlanet(1.2, 0x3b82f6, distances[1], 0.005, 0.5); 
+        createPlanet(1.8, 0x8b5cf6, distances[2], 0.003, -0.5); 
+        createPlanet(1.5, 0x00d2ff, distances[3], 0.002, 0);   
+
+        camera.position.set(0, 8, 45);
+        camera.lookAt(0, 0, 0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            stars.rotation.y += 0.0002;
+            galaxy.rotation.y -= 0.0005; 
+            
+            const sY = window.pageYOffset || document.documentElement.scrollTop;
+            solarSystem.rotation.x = (sY * 0.0004);
+            solarSystem.rotation.z = (sY * 0.0001);
+            
+            const hue = (sY % 10000) / 10000;
+            const newColor = new THREE.Color().setHSL(hue, 1, 0.5);
+            centerMat.color = newColor; pointLight.color = newColor;
+            
+            planets.forEach(p => { p.wrapper.rotation.y += p.speed; p.mesh.rotation.y += 0.01; });
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        /* ----------------------------------------------------
+           4. GLOBE.GL INTERACTIVE HEATMAP MATRIX (Simplified)
+        ---------------------------------------------------- */
+        let worldGlobe;
+        // Regional Customer and Student Data
+        const regionalData = {
+            'north-america': {
+                title: 'North American Node',
+                customers: 7190673,
+                flag: '🇺🇸',
+                location: 'USA Base Status',
+                students: [
+                    { name: 'Marcus T.', city: 'New York, NY', achievement: 'Top Performer', returns: '+3,245%' },
+                    { name: 'Sarah Chen', city: 'Los Angeles, CA', achievement: 'Excellence Badge', returns: '+2,890%' },
+                    { name: 'James Wilson', city: 'Chicago, IL', achievement: 'Master Trader', returns: '+2,456%' },
+                    { name: 'Emma Rodriguez', city: 'Houston, TX', achievement: 'Elite Rank', returns: '+1,987%' }
+                ]
+            },
+            'eurasian': {
+                title: 'Eurasian Federation Node',
+                customers: 5472300,
+                flag: '🇷🇺',
+                location: 'Russia Base Status',
+                students: [
+                    { name: 'Elena Volkov', city: 'Moscow, RU', achievement: 'Top Performer', returns: '+4,120%' },
+                    { name: 'Dimitri Petrov', city: 'St. Petersburg, RU', achievement: 'Excellence Badge', returns: '+3,456%' },
+                    { name: 'Natasha Sokolov', city: 'Novosibirsk, RU', achievement: 'Master Trader', returns: '+2,891%' },
+                    { name: 'Sergei Andreyev', city: 'Yekaterinburg, RU', achievement: 'Elite Rank', returns: '+2,345%' }
+                ]
+            },
+            'india': {
+                title: 'Indian Subcontinent Node',
+                customers: 5070120,
+                flag: '🇮🇳',
+                location: 'India Base Status',
+                students: [
+                    { name: 'Amit Verma', city: 'Mumbai, IN', achievement: 'Top Performer', returns: '+3,812%' },
+                    { name: 'Priya Sharma', city: 'Bangalore, IN', achievement: 'Excellence Badge', returns: '+3,210%' },
+                    { name: 'Rajesh Kumar', city: 'Delhi, IN', achievement: 'Master Trader', returns: '+2,678%' },
+                    { name: 'Neha Patel', city: 'Pune, IN', achievement: 'Elite Rank', returns: '+2,145%' }
+                ]
+            },
+            'china': {
+                title: 'Asian Pacific Node',
+                customers: 4275000,
+                flag: '🇨🇳',
+                location: 'China Base Status',
+                students: [
+                    { name: 'Wei Zhang', city: 'Shanghai, CN', achievement: 'Top Performer', returns: '+3,978%' },
+                    { name: 'Li Ming', city: 'Beijing, CN', achievement: 'Excellence Badge', returns: '+3,456%' },
+                    { name: 'Zhang Mei', city: 'Shenzhen, CN', achievement: 'Master Trader', returns: '+2,834%' },
+                    { name: 'Liu Chen', city: 'Hangzhou, CN', achievement: 'Elite Rank', returns: '+2,234%' }
+                ]
+            },
+            'nepal': {
+                title: 'Nepal Regional Hub',
+                customers: 39056,
+                flag: '🇳🇵',
+                location: 'Nepal Base Status',
+                students: [
+                    { name: 'Samir Shrestha', city: 'Kathmandu, NP', achievement: 'Founder', returns: '+4,958%' },
+                    { name: 'Ramesh Thapa', city: 'Pokhara, NP', achievement: 'Top Performer', returns: '+2,345%' },
+                    { name: 'Deepa Sharma', city: 'Lalitpur, NP', achievement: 'Excellence Badge', returns: '+1,876%' },
+                    { name: 'Arjun Poudel', city: 'Bhaktapur, NP', achievement: 'Elite Rank', returns: '+1,234%' }
+                ]
+            }
+        };
+
+        // Globe Matrix Initialization - Replaced with Premium 3D Earth
+        let isGlobeInitialized = false;
+        let currentRegion = null;
+        
+        function initGlobeMatrix() {
+            if (isGlobeInitialized) return;
+            isGlobeInitialized = true;
+        }
+
+        function displayRegionalData(region) {
+            if (!regionalData[region]) return;
+            
+            const data = regionalData[region];
+            const titleEl = document.getElementById('matrix-region-title');
+            const regionBox = document.querySelector('[class*="grid grid-cols"]');
+            
+            titleEl.innerHTML = `
+                <span class="text-brand-cyan">${data.flag}</span> ${data.title} 
+                <span class="text-xs text-slate-400 ml-2">(Active Students)</span>
+            `;
+            
+            // Update the statistics to show regional data
+            updateRegionalStats(region, data);
+            
+            // Show student excellence list
+            displayStudentExcellence(region, data);
+        }
+
+        function updateRegionalStats(region, data) {
+            const statsContainer = document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2');
+            if (!statsContainer) return;
+            
+            // Update displayed data
+            const boxes = statsContainer.querySelectorAll('.bg-black\\/40.p-4');
+            if (boxes.length > 0) {
+                boxes[0].innerHTML = `
+                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider mb-1">${data.flag} ${data.location}</span>
+                    <span class="text-xl font-black text-white font-mono">${data.customers.toLocaleString()} Users</span>
+                    <div class="mt-3 pt-3 border-t border-white/10">
+                        <span class="text-[9px] text-brand-emerald font-bold uppercase">Excellence Students: ${data.students.length}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function displayStudentExcellence(region, data) {
+            const titleEl = document.getElementById('matrix-region-title');
+            titleEl.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <span>
+                        <span class="text-brand-cyan">${data.flag}</span> 
+                        ${data.title}
+                    </span>
+                    <span class="text-[10px] bg-brand-emerald/20 text-brand-emerald px-2 py-1 rounded font-mono">
+                        ${data.students.length} Top Students
+                    </span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-white/10 space-y-2">
+                    ${data.students.map(student => `
+                        <div class="bg-white/5 p-2 rounded-lg text-[9px]">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-white font-bold block">${student.name}</span>
+                                    <span class="text-slate-400">${student.city}</span>
+                                </div>
+                                <span class="text-brand-emerald font-mono font-bold text-[10px]">${student.returns}</span>
+                            </div>
+                            <span class="inline-block mt-1 bg-brand-emerald/10 text-brand-emerald px-2 py-0.5 rounded text-[8px] uppercase font-bold tracking-wider">
+                                ⭐ ${student.achievement}
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function focusRegion(lat, lng, title) {
+            // Determine which region based on coordinates
+            let region = 'global';
+            if (lat > 20 && lat < 50 && lng < -80) region = 'north-america';
+            else if (lat > 40 && lat < 70 && lng > 0 && lng < 180) region = 'eurasian';
+            else if (lat > 5 && lat < 35 && lng > 60 && lng < 100) region = 'india';
+            else if (lat > 15 && lat < 55 && lng > 80 && lng < 130) region = 'china';
+            else if (lat > 25 && lat < 30 && lng > 80 && lng < 90) region = 'nepal';
+            
+            currentRegion = region;
+            
+            if (region !== 'global' && regionalData[region]) {
+                displayRegionalData(region);
+            } else {
+                document.getElementById('matrix-region-title').innerText = title || `Active ${title}`;
+            }
+        }
+
+        function resetGlobe() {
+            document.getElementById('matrix-region-title').innerHTML = `
+                <span class="text-slate-300">Active Standard Aggregate Matrix</span>
+                <span class="text-[10px] text-slate-500 ml-2 block mt-1">🌍 Global Network Overview</span>
+            `;
+            currentRegion = null;
+        }
+
+        /* ----------------------------------------------------
+           5. NAVIGATION, MODALS & LIVE INTERACTION LOGIC
+        ---------------------------------------------------- */
+        const sections = document.querySelectorAll('section, div[id="global-customers"]');
+        const navItems = document.querySelectorAll('.side-nav-item[href^="#"]');
+        window.addEventListener('scroll', () => {
+            let cur = '';
+            const sY = window.pageYOffset || document.documentElement.scrollTop;
+            sections.forEach(sec => { if (sY >= sec.offsetTop - 250) cur = sec.getAttribute('id'); });
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('href').substring(1) === cur) item.classList.add('active');
+            });
+        });
+
+        // Live Participants Counter
+        const participantsEl = document.getElementById('live-participants');
+        let currentParticipants = 124837;
+        setInterval(() => {
+            currentParticipants += Math.floor(Math.random() * 45) + 12;
+            participantsEl.textContent = currentParticipants.toLocaleString() + " Operators";
+        }, 6500);
+
+        const countdownEl = document.getElementById('comp-countdown');
+        if (countdownEl) {
+            let days = 14, hours = 8, minutes = 42, seconds = 15;
+            setInterval(() => {
+                seconds--;
+                if (seconds < 0) { seconds = 59; minutes--; }
+                if (minutes < 0) { minutes = 59; hours--; }
+                if (hours < 0) { hours = 23; days--; }
+                if (days < 0) { days = 30; }
+                countdownEl.innerText = `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+            }, 1000);
+        }
+
+        document.querySelectorAll('a[href="#faq-refund"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                closeModal(); 
+                const faq = document.getElementById('faq-refund');
+                if(faq) {
+                    faq.open = true;
+                    faq.classList.add('border-brand-emerald', 'shadow-[0_0_20px_rgba(0,229,153,0.3)]');
+                    setTimeout(() => {
+                        faq.classList.remove('border-brand-emerald', 'shadow-[0_0_20px_rgba(0,229,153,0.3)]');
+                    }, 3000);
+                }
+            });
+        });
+
+        // Main Auth Modal Engine
+        const modal = document.getElementById('authModal');
+        const modalContent = document.getElementById('authModalContent');
+        
+        function openModal(view, planName = null) {
+            modal.classList.remove('hidden'); 
+            void modal.offsetWidth; 
+            modal.classList.remove('opacity-0'); 
+            modalContent.classList.remove('scale-95'); 
+            modalContent.classList.add('scale-100');
+            document.body.style.overflow = 'hidden'; 
+            switchAuthView(view);
+            
+            const pBox = document.getElementById('selected-plan-box');
+            const pText = document.getElementById('selected-plan-name');
+            if (planName && view === 'register') { 
+                pBox.classList.remove('hidden'); 
+                pText.innerText = planName; 
+            } else {
+                pBox.classList.add('hidden');
+            }
+        }
+        
+        function closeModal() {
+            modal.classList.add('opacity-0'); 
+            modalContent.classList.remove('scale-100'); 
+            modalContent.classList.add('scale-95');
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+                
+                if(document.getElementById('toolsModal').classList.contains('hidden')) {
+                    document.body.style.overflow = ''; 
+                }
+            }, 300);
+        }
+        
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        
+        function switchAuthView(v) {
+            document.getElementById('signin-view').classList.toggle('hidden', v !== 'signin');
+            document.getElementById('register-view').classList.toggle('hidden', v === 'signin');
+        }
+
+        // Tools Embedded App Iframe Modal Engine
+        const toolsModal = document.getElementById('toolsModal');
+        const toolsModalContent = document.getElementById('toolsModalContent');
+
+        function openToolsModal() {
+            toolsModal.classList.remove('hidden');
+            void toolsModal.offsetWidth;
+            toolsModal.classList.remove('opacity-0');
+            toolsModalContent.classList.remove('scale-95');
+            toolsModalContent.classList.add('scale-100');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeToolsModal() {
+            toolsModal.classList.add('opacity-0');
+            toolsModalContent.classList.remove('scale-100');
+            toolsModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                toolsModal.classList.add('hidden');
+                if(document.getElementById('authModal').classList.contains('hidden')) {
+                    document.body.style.overflow = '';
+                }
+            }, 300);
+        }
+
+        toolsModal.addEventListener('click', (e) => { 
+            if (e.target === toolsModal) closeToolsModal(); 
+        });
+
+        /* ----------------------------------------------------
+           6. LIVE AI CHATBOT ENGINE
+        ---------------------------------------------------- */
+        const cWin = document.getElementById('chat-window');
+        const cMsg = document.getElementById('chat-messages');
+        
+        function toggleChat() { cWin.classList.toggle('hidden'); }
+
+        function handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            cMsg.innerHTML += `<div class="ml-auto bg-brand-cyan/20 border border-brand-cyan/40 rounded-xl p-3 text-white max-w-[85%] text-right shadow-sm mb-3">${text}</div>`;
+            input.value = ''; 
+            cMsg.scrollTop = cMsg.scrollHeight;
+
+            setTimeout(() => {
+                const q = text.toLowerCase();
+                let reply = "Processing complete. Our algorithmic framework strictly calculates displacement logic heavily weighted towards the NY AM and London Open. Avoid trading the dead zones.";
+                
+                if(q.includes("pay") || q.includes("card") || q.includes("mastercard") || q.includes("visa")) {
+                    reply = "Our global terminal supports MasterCard, Visa, Amex, Apple Pay, and Google Pay with international clearance protocols. Local Nepalese operators can utilize eSewa and Khalti nodes directly.";
+                } else if(q.includes("championship") || q.includes("competition") || q.includes("pool") || q.includes("prize")) {
+                    reply = "The monthly Algo-Championship features a $600,000 USD prize matrix divided among the Top 50 operators, including a randomized $100k pool for 50 active users.";
+                } else if(q.includes("scholarship") || q.includes("assistance") || q.includes("income")) {
+                    reply = "The Institutional Scholarship covers the matrix fees for lower-income applicants. Criteria require valid structural documentation alongside an active 30-day strict 3% max daily drawdown benchmark performance evaluation.";
+                } else if(q.includes("refund") || q.includes("cancel")) {
+                    reply = "Subscriptions can be terminated dynamically via your terminal profile. Digital core analytics, strategy access maps, and training models are strictly non-refundable due to content security protocols.";
+                } else if(q.includes("tool") || q.includes("app")) {
+                    reply = "You can access our analytical tools securely via the top navigation bar. It opens a direct, unlisted line into our secondary algorithmic platform directly within this page.";
+                }
+
+                cMsg.innerHTML += `
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-slate-300 max-w-[85%] animate-fade-in leading-relaxed shadow-sm mb-3">
+                        <strong class="block text-[10px] text-brand-emerald mb-1 tracking-widest uppercase flex items-center gap-1.5"><i class="fa-solid fa-microchip"></i> DEEPINT AI</strong>
+                        ${reply}
+                    </div>
+                `;
+                cMsg.scrollTop = cMsg.scrollHeight;
+            }, 800);
+        }
+    </script>
+</body>
+</html>
+
+
